@@ -812,4 +812,238 @@ async function generateExport(){
 }
 </script>
 </body>
+</html>async function saveContact(){
+  const fn=document.getElementById('c-fname').value.trim(),ln=document.getElementById('c-lname').value.trim();
+  if(!fn||!ln){document.getElementById('c-err').textContent='Name required.';return;}
+  const payload={owner_id:currentUser.employee_id,first_name:fn,last_name:ln,title:document.getElementById('c-title').value.trim(),phone:document.getElementById('c-phone').value.trim(),email:document.getElementById('c-email').value.trim(),address:document.getElementById('c-address').value.trim(),notes:document.getElementById('c-notes').value.trim(),industry:document.getElementById('c-industry').value,lead_source:document.getElementById('c-source').value,company_id:document.getElementById('c-company').value||null,updated_at:new Date().toISOString()};
+  let error;
+  if(editingContactId){({error}=await sb.from('contacts').update(payload).eq('id',editingContactId));}
+  else{({error}=await sb.from('contacts').insert(payload));if(!error)await sb.from('activities').insert({owner_id:currentUser.employee_id,type:'created',description:`Added contact: ${fn} ${ln}`});}
+  if(error){document.getElementById('c-err').textContent='Error: '+error.message;return;}
+  closeModal('contact-modal');loadContacts();loadCrmDropdowns();
+}
+async function deleteContact(){if(!confirm('Delete this contact?'))return;await sb.from('contacts').delete().eq('id',editingContactId);closeModal('contact-modal');loadContacts();}
+
+async function loadCompanies(){const{data}=await sb.from('companies').select('*').eq('owner_id',currentUser.employee_id).order('name');allCompanies=data||[];renderCompanies(data||[]);}
+function filterCompanies(){const q=document.getElementById('company-search').value.toLowerCase();renderCompanies(allCompanies.filter(c=>(c.name+' '+(c.city||'')+' '+(c.type||'')).toLowerCase().includes(q)));}
+function renderCompanies(companies){
+  const el=document.getElementById('companies-list');
+  if(!companies.length){el.innerHTML='<div class="empty-state"><i class="ti ti-building"></i>No companies yet.</div>';return;}
+  el.innerHTML=companies.map(c=>`<div class="contact-card" onclick="openEditCompany('${c.id}')"><div class="avatar" style="background:var(--gold-light);color:var(--gold-dark);font-size:18px;width:40px;height:40px;"><i class="ti ti-building"></i></div><div style="flex:1;"><div style="font-size:14px;font-weight:500;">${c.name}</div><div style="font-size:12px;color:var(--muted);">${[c.type,c.city,c.state].filter(Boolean).join(' · ')}</div>${c.phone?`<div style="font-size:12px;color:var(--muted);"><a href="tel:${c.phone}" onclick="event.stopPropagation()">${c.phone}</a></div>`:''}</div>${c.industry?`<span class="badge" style="background:var(--blue-bg);color:var(--blue-text);align-self:flex-start;font-size:10px;">${c.industry}</span>`:''}</div>`).join('');
+}
+function resetCompanyForm(){editingCompanyId=null;['co-name','co-address','co-city','co-state','co-zip','co-phone','co-website','co-notes'].forEach(id=>document.getElementById(id).value='');document.getElementById('co-type').value='';document.getElementById('co-industry').value='';document.getElementById('co-err').textContent='';document.getElementById('co-delete-btn').style.display='none';}
+async function openEditCompany(id){const{data}=await sb.from('companies').select('*').eq('id',id).single();if(!data)return;editingCompanyId=id;document.getElementById('co-name').value=data.name;document.getElementById('co-type').value=data.type||'';document.getElementById('co-industry').value=data.industry||'';document.getElementById('co-address').value=data.address||'';document.getElementById('co-city').value=data.city||'';document.getElementById('co-state').value=data.state||'';document.getElementById('co-zip').value=data.zip||'';document.getElementById('co-phone').value=data.phone||'';document.getElementById('co-website').value=data.website||'';document.getElementById('co-notes').value=data.notes||'';document.getElementById('co-delete-btn').style.display='inline-flex';openModal('company-modal');}
+async function saveCompany(){const name=document.getElementById('co-name').value.trim();if(!name){document.getElementById('co-err').textContent='Name required.';return;}const payload={owner_id:currentUser.employee_id,name,type:document.getElementById('co-type').value,industry:document.getElementById('co-industry').value,address:document.getElementById('co-address').value.trim(),city:document.getElementById('co-city').value.trim(),state:document.getElementById('co-state').value.trim(),zip:document.getElementById('co-zip').value.trim(),phone:document.getElementById('co-phone').value.trim(),website:document.getElementById('co-website').value.trim(),notes:document.getElementById('co-notes').value.trim(),updated_at:new Date().toISOString()};let error;if(editingCompanyId){({error}=await sb.from('companies').update(payload).eq('id',editingCompanyId));}else{({error}=await sb.from('companies').insert(payload));if(!error)await sb.from('activities').insert({owner_id:currentUser.employee_id,type:'created',description:`Added company: ${name}`});}if(error){document.getElementById('co-err').textContent='Error: '+error.message;return;}closeModal('company-modal');loadCompanies();loadCrmDropdowns();}
+async function deleteCompany(){if(!confirm('Delete?'))return;await sb.from('companies').delete().eq('id',editingCompanyId);closeModal('company-modal');loadCompanies();}
+
+async function loadDeals(){const{data}=await sb.from('deals').select('*,contacts(first_name,last_name),companies(name)').eq('owner_id',currentUser.employee_id).order('created_at',{ascending:false});allDeals=data||[];renderDeals(data||[]);}
+function renderDeals(deals){
+  const el=document.getElementById('deals-pipeline');
+  const stages=['Lead','Contacted','Meeting Scheduled','Proposal','Won','Lost'];
+  el.innerHTML='<div class="pipeline">'+stages.map(stage=>{
+    const sd=deals.filter(d=>d.stage===stage);
+    const total=sd.reduce((a,d)=>a+(parseFloat(d.value)||0),0);
+    return`<div class="pipeline-col"><div class="pipeline-col-hd"><span>${stage}</span><span>${sd.length}</span></div>${total>0?`<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">${fmtMoney(total)}</div>`:''}`+sd.map(d=>`<div class="pipeline-card" onclick="openEditDeal('${d.id}')"><div class="pipeline-card-title">${d.title}</div><div class="pipeline-card-meta">${d.value?fmtMoney(d.value)+' ':''}${d.contacts?'· '+d.contacts.first_name+' '+d.contacts.last_name:''}</div>${d.close_date?`<div class="pipeline-card-meta">Close: ${fmtDateShort(d.close_date)}</div>`:''}</div>`).join('')+'</div>';
+  }).join('')+'</div>';
+}
+function resetDealForm(){editingDealId=null;['d-title','d-value','d-prob','d-desc','d-lost'].forEach(id=>document.getElementById(id).value='');document.getElementById('d-stage').value='Lead';document.getElementById('d-contact').value='';document.getElementById('d-company').value='';document.getElementById('d-close').value='';document.getElementById('d-err').textContent='';document.getElementById('d-delete-btn').style.display='none';document.getElementById('d-lost-wrap').style.display='none';document.getElementById('deal-modal-title').innerHTML='<i class="ti ti-trending-up" style="color:var(--gold);margin-right:6px;"></i>Add deal';}
+async function openEditDeal(id){const{data}=await sb.from('deals').select('*').eq('id',id).single();if(!data)return;editingDealId=id;document.getElementById('deal-modal-title').innerHTML='<i class="ti ti-trending-up" style="color:var(--gold);margin-right:6px;"></i>Edit deal';document.getElementById('d-title').value=data.title;document.getElementById('d-stage').value=data.stage;document.getElementById('d-value').value=data.value||'';document.getElementById('d-contact').value=data.contact_id||'';document.getElementById('d-company').value=data.company_id||'';document.getElementById('d-close').value=data.close_date||'';document.getElementById('d-prob').value=data.probability||'';document.getElementById('d-desc').value=data.description||'';document.getElementById('d-lost').value=data.lost_reason||'';document.getElementById('d-lost-wrap').style.display=data.stage==='Lost'?'block':'none';document.getElementById('d-delete-btn').style.display='inline-flex';openModal('deal-modal');}
+async function saveDeal(){
+  const title=document.getElementById('d-title').value.trim();if(!title){document.getElementById('d-err').textContent='Title required.';return;}
+  const newStage=document.getElementById('d-stage').value;
+  let oldStage=null;if(editingDealId){const{data}=await sb.from('deals').select('stage').eq('id',editingDealId).single();oldStage=data?.stage;}
+  const payload={owner_id:currentUser.employee_id,title,stage:newStage,value:parseFloat(document.getElementById('d-value').value)||null,contact_id:document.getElementById('d-contact').value||null,company_id:document.getElementById('d-company').value||null,close_date:document.getElementById('d-close').value||null,probability:parseInt(document.getElementById('d-prob').value)||0,description:document.getElementById('d-desc').value.trim(),lost_reason:document.getElementById('d-lost').value.trim(),updated_at:new Date().toISOString()};
+  let error;
+  if(editingDealId){({error}=await sb.from('deals').update(payload).eq('id',editingDealId));if(!error&&oldStage!==newStage)await sb.from('activities').insert({owner_id:currentUser.employee_id,type:'stage_change',deal_id:editingDealId,description:`Deal "${title}" moved: ${oldStage} → ${newStage}`});}
+  else{({error}=await sb.from('deals').insert(payload));if(!error)await sb.from('activities').insert({owner_id:currentUser.employee_id,type:'created',description:`Created deal: ${title}`});}
+  if(error){document.getElementById('d-err').textContent='Error: '+error.message;return;}
+  closeModal('deal-modal');loadDeals();loadCrmDropdowns();
+}
+async function deleteDeal(){if(!confirm('Delete?'))return;await sb.from('deals').delete().eq('id',editingDealId);closeModal('deal-modal');loadDeals();}
+
+async function loadMeetings(){const{data}=await sb.from('meetings').select('*,contacts(first_name,last_name),companies(name)').eq('owner_id',currentUser.employee_id).order('meeting_date',{ascending:false});renderMeetings(data||[]);}
+function renderMeetings(meetings){
+  const el=document.getElementById('meetings-list');
+  if(!meetings.length){el.innerHTML='<div class="empty-state"><i class="ti ti-calendar-event"></i>No meetings yet.</div>';return;}
+  const now=new Date();
+  const upcoming=meetings.filter(m=>new Date(m.meeting_date)>=now);
+  const past=meetings.filter(m=>new Date(m.meeting_date)<now);
+  const renderGroup=(title,items)=>items.length?`<div style="font-size:12px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:1rem 0 8px;">${title}</div>`+items.map(m=>`<div class="contact-card" onclick="openEditMeeting('${m.id}')"><div style="width:44px;text-align:center;flex-shrink:0;"><div style="font-size:18px;font-weight:500;color:var(--gold-dark);">${new Date(m.meeting_date).getDate()}</div><div style="font-size:10px;color:var(--muted);">${new Date(m.meeting_date).toLocaleDateString([],{month:'short'})}</div></div><div style="flex:1;"><div style="font-size:14px;font-weight:500;">${m.title}</div><div style="font-size:12px;color:var(--muted);">${fmtTime(m.meeting_date)} · ${(m.meeting_type||'').replace('_',' ')}${m.contacts?' · '+m.contacts.first_name+' '+m.contacts.last_name:''}</div>${m.location?`<div style="font-size:12px;color:var(--muted);">${m.location}</div>`:''}</div><button class="btn btn-sm" style="font-size:11px;" onclick="event.stopPropagation();addToCalendarById('${m.id}')"><i class="ti ti-calendar-plus"></i></button></div>`).join(''):'';
+  el.innerHTML=renderGroup('Upcoming',upcoming)+renderGroup('Past',past);
+}
+function resetMeetingForm(){editingMeetingId=null;currentCalMeeting=null;['mt-title','mt-date','mt-location','mt-notes','mt-outcome'].forEach(id=>document.getElementById(id).value='');document.getElementById('mt-duration').value='60';document.getElementById('mt-type').value='in_person';document.getElementById('mt-contact').value='';document.getElementById('mt-company').value='';document.getElementById('mt-deal').value='';document.getElementById('mt-err').textContent='';document.getElementById('mt-delete-btn').style.display='none';document.getElementById('mt-cal-btn').style.display='none';}
+async function openEditMeeting(id){const{data}=await sb.from('meetings').select('*').eq('id',id).single();if(!data)return;editingMeetingId=id;currentCalMeeting=data;document.getElementById('mt-title').value=data.title;document.getElementById('mt-date').value=toDatetimeLocal(data.meeting_date);document.getElementById('mt-duration').value=data.duration_mins||60;document.getElementById('mt-contact').value=data.contact_id||'';document.getElementById('mt-company').value=data.company_id||'';document.getElementById('mt-deal').value=data.deal_id||'';document.getElementById('mt-type').value=data.meeting_type||'in_person';document.getElementById('mt-location').value=data.location||'';document.getElementById('mt-notes').value=data.notes||'';document.getElementById('mt-outcome').value=data.outcome||'';document.getElementById('mt-delete-btn').style.display='inline-flex';document.getElementById('mt-cal-btn').style.display='inline-flex';openModal('meeting-modal');}
+async function saveMeeting(){
+  const title=document.getElementById('mt-title').value.trim(),date=document.getElementById('mt-date').value;
+  if(!title||!date){document.getElementById('mt-err').textContent='Title and date required.';return;}
+  const payload={owner_id:currentUser.employee_id,title,meeting_date:fromDatetimeLocal(date),duration_mins:parseInt(document.getElementById('mt-duration').value)||60,contact_id:document.getElementById('mt-contact').value||null,company_id:document.getElementById('mt-company').value||null,deal_id:document.getElementById('mt-deal').value||null,meeting_type:document.getElementById('mt-type').value,location:document.getElementById('mt-location').value.trim(),notes:document.getElementById('mt-notes').value.trim(),outcome:document.getElementById('mt-outcome').value.trim()};
+  let error;
+  if(editingMeetingId){({error}=await sb.from('meetings').update(payload).eq('id',editingMeetingId));}
+  else{const{data,error:e}=await sb.from('meetings').insert(payload).select().single();error=e;if(!error){currentCalMeeting=data;await sb.from('activities').insert({owner_id:currentUser.employee_id,type:'meeting',contact_id:payload.contact_id,description:`Scheduled: ${title} on ${fmtDateTime(payload.meeting_date)}`});}}
+  if(error){document.getElementById('mt-err').textContent='Error: '+error.message;return;}
+  closeModal('meeting-modal');loadMeetings();
+}
+async function deleteMeeting(){if(!confirm('Delete?'))return;await sb.from('meetings').delete().eq('id',editingMeetingId);closeModal('meeting-modal');loadMeetings();}
+function addToCalendar(){
+  if(!currentCalMeeting)return;
+  const start=new Date(currentCalMeeting.meeting_date);
+  const end=new Date(start.getTime()+(currentCalMeeting.duration_mins||60)*60000);
+  const fmt=d=>d.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
+  const url=`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(currentCalMeeting.title)}&dates=${fmt(start)}/${fmt(end)}&details=${encodeURIComponent(currentCalMeeting.notes||'')}&location=${encodeURIComponent(currentCalMeeting.location||'')}`;
+  window.open(url,'_blank');
+}
+async function addToCalendarById(id){const{data}=await sb.from('meetings').select('*').eq('id',id).single();if(!data)return;currentCalMeeting=data;addToCalendar();}
+
+async function loadTasks(){let q=sb.from('tasks').select('*,contacts(first_name,last_name)').eq('owner_id',currentUser.employee_id);if(taskFilter!=='all')q=q.eq('status',taskFilter);const{data}=await q.order('due_date');renderTasks(data||[]);}
+function setTaskFilter(f){taskFilter=f;['open','completed','all'].forEach(n=>{const el=document.getElementById('tf-'+n);if(el){el.style.background=n===f?'var(--gold-light)':'';el.style.borderColor=n===f?'var(--gold)':'var(--border)';}});loadTasks();}
+function renderTasks(tasks){
+  const el=document.getElementById('tasks-list');
+  if(!tasks.length){el.innerHTML='<div class="empty-state"><i class="ti ti-checkbox"></i>No tasks.</div>';return;}
+  el.innerHTML=tasks.map(t=>`<div class="task-row"><button class="btn btn-sm" style="padding:4px 8px;" onclick="${t.status==='open'?`completeTask('${t.id}')`:`reopenTask('${t.id}')`}"><i class="ti ${t.status==='open'?'ti-circle':'ti-circle-check'}" style="color:${t.status==='open'?'var(--muted)':'var(--green-text)'};"></i></button><div style="flex:1;${t.status==='completed'?'opacity:.5;text-decoration:line-through;':''}"><div style="font-size:14px;">${t.title}</div><div style="font-size:12px;color:var(--muted);">${t.due_date?fmtDateTime(t.due_date)+' · ':''}${priorityBadge(t.priority)}${t.contacts?' · '+t.contacts.first_name+' '+t.contacts.last_name:''}</div></div><button class="btn btn-sm" onclick="openEditTask('${t.id}')"><i class="ti ti-edit"></i></button></div>`).join('');
+}
+function resetTaskForm(){editingTaskId=null;['tk-title','tk-due','tk-notes'].forEach(id=>document.getElementById(id).value='');document.getElementById('tk-priority').value='medium';document.getElementById('tk-contact').value='';document.getElementById('tk-deal').value='';document.getElementById('tk-err').textContent='';document.getElementById('tk-delete-btn').style.display='none';}
+async function openEditTask(id){const{data}=await sb.from('tasks').select('*').eq('id',id).single();if(!data)return;editingTaskId=id;document.getElementById('tk-title').value=data.title;document.getElementById('tk-due').value=data.due_date?toDatetimeLocal(data.due_date):'';document.getElementById('tk-priority').value=data.priority||'medium';document.getElementById('tk-contact').value=data.contact_id||'';document.getElementById('tk-deal').value=data.deal_id||'';document.getElementById('tk-notes').value=data.notes||'';document.getElementById('tk-delete-btn').style.display='inline-flex';openModal('task-modal');}
+async function saveTask(){const title=document.getElementById('tk-title').value.trim();if(!title){document.getElementById('tk-err').textContent='Title required.';return;}const payload={owner_id:currentUser.employee_id,title,due_date:fromDatetimeLocal(document.getElementById('tk-due').value),priority:document.getElementById('tk-priority').value,contact_id:document.getElementById('tk-contact').value||null,deal_id:document.getElementById('tk-deal').value||null,notes:document.getElementById('tk-notes').value.trim()};let error;if(editingTaskId){({error}=await sb.from('tasks').update(payload).eq('id',editingTaskId));}else{({error}=await sb.from('tasks').insert(payload));}if(error){document.getElementById('tk-err').textContent='Error: '+error.message;return;}closeModal('task-modal');loadTasks();}
+async function completeTask(id){await sb.from('tasks').update({status:'completed',completed_at:new Date().toISOString()}).eq('id',id);loadTasks();}
+async function reopenTask(id){await sb.from('tasks').update({status:'open',completed_at:null}).eq('id',id);loadTasks();}
+async function deleteTask(){if(!confirm('Delete?'))return;await sb.from('tasks').delete().eq('id',editingTaskId);closeModal('task-modal');loadTasks();}
+
+async function loadActivity(){const{data}=await sb.from('activities').select('*,contacts(first_name,last_name),deals(title)').eq('owner_id',currentUser.employee_id).order('created_at',{ascending:false}).limit(50);renderActivityList(data||[],document.getElementById('activity-list'));}
+function renderActivityList(activities,el){if(!activities.length){el.innerHTML='<div class="empty-state"><i class="ti ti-activity"></i>No activity yet.</div>';return;}el.innerHTML=activities.map(a=>`<div class="activity-item">${activityIcon(a.type)}<div style="flex:1;"><div style="font-size:13px;">${a.description}</div><div style="font-size:11px;color:var(--muted);">${fmtDateTime(a.created_at)}${a.contacts?' · '+a.contacts.first_name+' '+a.contacts.last_name:''}${a.deals?' · '+a.deals.title:''}</div></div></div>`).join('');}
+async function saveActivity(){const desc=document.getElementById('n-desc').value.trim();if(!desc){document.getElementById('n-err').textContent='Required.';return;}await sb.from('activities').insert({owner_id:currentUser.employee_id,type:document.getElementById('n-type').value,contact_id:document.getElementById('n-contact').value||null,deal_id:document.getElementById('n-deal').value||null,description:desc});closeModal('note-modal');document.getElementById('n-desc').value='';loadActivity();}
+
+async function initAdmin(){document.getElementById('screen-login').style.display='none';document.getElementById('screen-admin').style.display='';adminPeriodOffset=0;renderAdminDashboard();const{start,end}=getPeriodBounds(0);const fmt=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;document.getElementById('exp-start').value=fmt(start);document.getElementById('exp-end').value=fmt(end);}
+function adminMainTab(t){['timeclock','crm','employees'].forEach(n=>{const el=document.getElementById('admin-section-'+n);if(el)el.style.display=n===t?'':'none';});document.querySelectorAll('#screen-admin .main-tab').forEach((b,i)=>b.classList.toggle('active',['timeclock','crm','employees'][i]===t));if(t==='timeclock')renderAdminDashboard();else if(t==='crm')initAdminCrm();else if(t==='employees')renderAdminRoster();}
+function adminClockTab(t){['dashboard','timesheets','export'].forEach(n=>{const el=document.getElementById('atab-'+n);if(el)el.style.display=n===t?'':'none';});document.querySelectorAll('#admin-section-timeclock .tab').forEach((b,i)=>b.classList.toggle('active',['dashboard','timesheets','export'][i]===t));if(t==='timesheets')renderAdminTimesheets();}
+async function renderAdminDashboard(){
+  const[{data:emps},{data:open},{data:pshifts}]=await Promise.all([sb.from('employees').select('*').eq('active',true).neq('role','admin'),sb.from('shifts').select('employee_id').is('clock_out',null),sb.from('shifts').select('*').gte('clock_in',getPeriodBounds(0).start.toISOString()).lte('clock_in',getPeriodBounds(0).end.toISOString()).not('clock_out','is',null)]);
+  document.getElementById('stat-emp').textContent=emps?emps.length:0;document.getElementById('stat-in').textContent=open?open.length:0;
+  let totalMs=0;if(pshifts)pshifts.forEach(s=>totalMs+=new Date(s.clock_out)-new Date(s.clock_in));
+  document.getElementById('stat-hrs').textContent=msToHours(totalMs);document.getElementById('stat-shifts').textContent=pshifts?pshifts.length:0;
+  const openIds=new Set(open?open.map(s=>s.employee_id):[]);
+  document.getElementById('dash-status').innerHTML=emps&&emps.length?emps.map(e=>`<div class="row"><div class="avatar" style="${avatarStyle(e.color)}">${initials(e)}</div><div style="flex:1;"><div style="font-size:14px;">${e.first_name} ${e.last_name}</div><div style="font-size:12px;color:var(--muted);">ID: ${e.employee_id} · RunPayroll #: ${e.runpayroll_num||'—'}</div></div><span class="badge ${openIds.has(e.employee_id)?'badge-in':'badge-out'}">${openIds.has(e.employee_id)?'Clocked in':'Clocked out'}</span></div>`).join(''):'<p style="font-size:13px;color:var(--muted);">No employees.</p>';
+}
+function adminShiftPeriod(d){adminPeriodOffset+=d;renderAdminTimesheets();}
+async function renderAdminTimesheets(){
+  document.getElementById('admin-period-label').textContent=periodLabel(adminPeriodOffset);
+  const{start,end}=getPeriodBounds(adminPeriodOffset);
+  const filterEmp=document.getElementById('admin-ts-filter').value;
+  const{data:emps}=await sb.from('employees').select('employee_id,first_name,last_name,color').eq('active',true).neq('role','admin').order('last_name');
+  if(emps){const sel=document.getElementById('admin-ts-filter');const cur=sel.value;sel.innerHTML='<option value="">All employees</option>'+emps.map(e=>`<option value="${e.employee_id}" ${e.employee_id===cur?'selected':''}>${e.first_name} ${e.last_name}</option>`).join('');}
+  let q=sb.from('shifts').select('*').gte('clock_in',start.toISOString()).lte('clock_in',end.toISOString()).order('clock_in');if(filterEmp)q=q.eq('employee_id',filterEmp);
+  const{data:shifts}=await q;
+  const container=document.getElementById('admin-ts-content');
+  if(!shifts||!shifts.length){container.innerHTML='<p style="font-size:13px;color:var(--muted);">No shifts this period.</p>';return;}
+  const empMap={};if(emps)emps.forEach(e=>empMap[e.employee_id]=e);
+  const byEmp={};shifts.forEach(s=>{if(!byEmp[s.employee_id])byEmp[s.employee_id]=[];byEmp[s.employee_id].push(s);});
+  container.innerHTML=Object.entries(byEmp).map(([eid,eshifts])=>{
+    const emp=empMap[eid]||{first_name:eid,last_name:'',color:0};let totalMs=0;const byDay={};
+    eshifts.forEach(s=>{const d=new Date(s.clock_in).toDateString();if(!byDay[d])byDay[d]=[];byDay[d].push(s);if(s.clock_out)totalMs+=new Date(s.clock_out)-new Date(s.clock_in);});
+    const dayRows=Object.entries(byDay).map(([day,dshifts])=>{let dayMs=0;const punches=dshifts.map(s=>{if(s.clock_out)dayMs+=new Date(s.clock_out)-new Date(s.clock_in);return`<div class="ts-punch">${s.edited?'<span class="badge badge-edited">edited</span>':''}<span>${fmtTime(s.clock_in)} → ${s.clock_out?fmtTime(s.clock_out):'—'}</span><span style="margin-left:auto;color:var(--muted);font-size:12px;">${s.clock_out?hoursStr(new Date(s.clock_out)-new Date(s.clock_in)):'open'}</span><button class="btn btn-sm" style="padding:3px 8px;font-size:11px;" onclick="openEditShift('${s.id}')"><i class="ti ti-edit"></i></button></div>`;}).join('');return`<div class="ts-day"><div class="ts-day-header"><span style="font-weight:500;color:var(--gold-dark);">${fmtDate(new Date(day))}</span><span style="color:#A07840;">${hoursStr(dayMs)}</span></div>${punches}</div>`;}).join('');
+    return`<div class="card" style="margin-bottom:1rem;"><div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border);"><div class="avatar" style="${avatarStyle(emp.color)}">${initials(emp)}</div><div><div style="font-size:14px;font-weight:500;">${emp.first_name} ${emp.last_name}</div><div style="font-size:12px;color:var(--muted);">Total: ${hoursStr(totalMs)}</div></div></div>${dayRows}</div>`;
+  }).join('');
+}
+async function openEditShift(shiftId){
+  editingShiftId=shiftId;
+  const{data:s}=await sb.from('shifts').select('*').eq('id',shiftId).single();if(!s)return;
+  document.getElementById('es-in').value=toDatetimeLocal(s.clock_in);document.getElementById('es-out').value=s.clock_out?toDatetimeLocal(s.clock_out):'';document.getElementById('es-reason').value='';document.getElementById('es-err').textContent='';
+  const{data:emp}=await sb.from('employees').select('first_name,last_name').eq('employee_id',s.employee_id).single();
+  document.getElementById('edit-shift-emp-info').innerHTML=`<strong>${emp?emp.first_name+' '+emp.last_name:s.employee_id}</strong> · ${fmtDate(s.clock_in)}`;
+  const{data:hist}=await sb.from('edit_history').select('*').eq('shift_id',shiftId).order('edited_at',{ascending:false});
+  document.getElementById('es-audit').innerHTML=hist&&hist.length?`<div class="sec-label" style="margin-top:1rem;">Edit history</div>`+hist.map(h=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;"><span class="badge badge-edited">${h.field_changed}</span> ${h.old_value||'—'} → <strong>${h.new_value||'—'}</strong><div style="font-size:11px;color:var(--muted);">By ${h.edited_by} · ${fmtDateTime(h.edited_at)}${h.reason?' · "'+h.reason+'"':''}</div></div>`).join(''):'';
+  openModal('edit-shift-modal');
+}
+async function saveShiftEdit(){
+  const newIn=fromDatetimeLocal(document.getElementById('es-in').value),newOut=fromDatetimeLocal(document.getElementById('es-out').value)||null,reason=document.getElementById('es-reason').value.trim();
+  if(!reason){document.getElementById('es-err').textContent='Reason required.';return;}
+  const{data:orig}=await sb.from('shifts').select('*').eq('id',editingShiftId).single();
+  const entries=[];
+  if(orig.clock_in&&new Date(orig.clock_in).toISOString()!==new Date(newIn).toISOString())entries.push({shift_id:editingShiftId,edited_by:currentUser.employee_id,field_changed:'clock_in',old_value:fmtDateTime(orig.clock_in),new_value:fmtDateTime(newIn),reason});
+  const origOut=orig.clock_out?new Date(orig.clock_out).toISOString():null,newOutISO=newOut?new Date(newOut).toISOString():null;
+  if(origOut!==newOutISO)entries.push({shift_id:editingShiftId,edited_by:currentUser.employee_id,field_changed:'clock_out',old_value:orig.clock_out?fmtDateTime(orig.clock_out):'—',new_value:newOut?fmtDateTime(newOut):'—',reason});
+  if(!entries.length){closeModal('edit-shift-modal');return;}
+  await sb.from('shifts').update({clock_in:newIn,clock_out:newOut,edited:true}).eq('id',editingShiftId);
+  if(entries.length)await sb.from('edit_history').insert(entries);
+  closeModal('edit-shift-modal');renderAdminTimesheets();
+}
+async function deleteShift(){if(!confirm('Delete this shift?'))return;await sb.from('edit_history').delete().eq('shift_id',editingShiftId);await sb.from('shifts').delete().eq('id',editingShiftId);closeModal('edit-shift-modal');renderAdminTimesheets();}
+
+async function initAdminCrm(){
+  const{data:emps}=await sb.from('employees').select('employee_id,first_name,last_name').eq('active',true).neq('role','admin').order('last_name');
+  const opts='<option value="">All employees</option>'+(emps||[]).map(e=>`<option value="${e.employee_id}">${e.first_name} ${e.last_name}</option>`).join('');
+  ['adm-emp-filter','adm-contact-emp-filter','adm-deal-emp-filter','adm-meeting-emp-filter','adm-activity-emp-filter'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
+  loadAdminCrmOverview();
+}
+const ADMIN_CRM_TABS=['overview','contacts','deals','meetings','activity'];
+function adminCrmTab(t){ADMIN_CRM_TABS.forEach(n=>{const el=document.getElementById('admin-crm-'+n);if(el)el.style.display=n===t?'':'none';});document.querySelectorAll('#admin-section-crm .tab').forEach((b,i)=>b.classList.toggle('active',ADMIN_CRM_TABS[i]===t));if(t==='overview')loadAdminCrmOverview();else if(t==='contacts')loadAdminContacts();else if(t==='deals')loadAdminDeals();else if(t==='meetings')loadAdminMeetings();else if(t==='activity')loadAdminActivity();}
+async function loadAdminCrmOverview(){
+  const empFilter=document.getElementById('adm-emp-filter').value;
+  let dQ=sb.from('deals').select('id,value,stage,owner_id');if(empFilter)dQ=dQ.eq('owner_id',empFilter);
+  let cQ=sb.from('contacts').select('id,owner_id');if(empFilter)cQ=cQ.eq('owner_id',empFilter);
+  const[{data:deals},{data:contacts}]=await Promise.all([dQ,cQ]);
+  document.getElementById('adm-crm-contacts').textContent=(contacts||[]).length;
+  document.getElementById('adm-crm-deals').textContent=(deals||[]).length;
+  document.getElementById('adm-crm-won').textContent=(deals||[]).filter(d=>d.stage==='Won').length;
+  const pipeline=(deals||[]).filter(d=>!['Won','Lost'].includes(d.stage)).reduce((a,d)=>a+(parseFloat(d.value)||0),0);
+  document.getElementById('adm-crm-value').textContent='$'+(pipeline/1000).toFixed(0)+'k';
+  const stages=['Lead','Contacted','Meeting Scheduled','Proposal','Won','Lost'];
+  document.getElementById('adm-pipeline-breakdown').innerHTML=stages.map(s=>{const sd=(deals||[]).filter(d=>d.stage===s);const val=sd.reduce((a,d)=>a+(parseFloat(d.value)||0),0);return`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">${stageBadge(s)}<span style="flex:1;">${sd.length} deal${sd.length!==1?'s':''}</span><span style="color:var(--muted);">${val>0?fmtMoney(val):''}</span></div>`;}).join('');
+  const{data:emps}=await sb.from('employees').select('employee_id,first_name,last_name').eq('active',true).neq('role','admin');
+  if(!emps)return;
+  const rows=await Promise.all(emps.map(async e=>{const[{data:ec},{data:ed},{data:ea}]=await Promise.all([sb.from('contacts').select('id').eq('owner_id',e.employee_id),sb.from('deals').select('id').eq('owner_id',e.employee_id),sb.from('activities').select('id').eq('owner_id',e.employee_id)]);return`<div class="row"><div style="flex:1;font-size:14px;">${e.first_name} ${e.last_name}</div><span style="font-size:12px;color:var(--muted);">${(ec||[]).length} contacts · ${(ed||[]).length} deals · ${(ea||[]).length} activities</span></div>`;}));
+  document.getElementById('adm-emp-activity').innerHTML=rows.join('');
+}
+async function loadAdminContacts(){
+  const emp=document.getElementById('adm-contact-emp-filter').value,q=document.getElementById('adm-contact-search').value.toLowerCase();
+  let query=sb.from('contacts').select('*,companies(name),employees(first_name,last_name)').order('last_name');if(emp)query=query.eq('owner_id',emp);
+  const{data}=await query;
+  const filtered=(data||[]).filter(c=>!q||(c.first_name+' '+c.last_name+' '+(c.companies?.name||'')).toLowerCase().includes(q));
+  document.getElementById('adm-contacts-list').innerHTML=filtered.length?filtered.map(c=>`<div class="contact-card"><div class="avatar" style="${avatarStyle(Math.abs(c.first_name.charCodeAt(0)-65)%6)}">${(c.first_name[0]+c.last_name[0]).toUpperCase()}</div><div style="flex:1;"><div style="font-size:14px;font-weight:500;">${c.first_name} ${c.last_name}</div><div style="font-size:12px;color:var(--muted);">${c.title||''}${c.companies?' · '+c.companies.name:''}</div>${c.phone?`<div style="font-size:12px;color:var(--muted);">${c.phone}</div>`:''}</div><div style="text-align:right;font-size:11px;color:var(--muted);">${c.employees?c.employees.first_name+' '+c.employees.last_name:c.owner_id}</div></div>`).join(''):'<div class="empty-state"><i class="ti ti-users"></i>No contacts.</div>';
+}
+async function loadAdminDeals(){
+  const emp=document.getElementById('adm-deal-emp-filter').value;
+  let q=sb.from('deals').select('*,contacts(first_name,last_name),employees(first_name,last_name)').order('created_at',{ascending:false});if(emp)q=q.eq('owner_id',emp);
+  const{data}=await q;
+  document.getElementById('adm-deals-list').innerHTML=data&&data.length?data.map(d=>`<div class="contact-card"><div style="flex:1;"><div style="font-size:14px;font-weight:500;">${d.title}</div><div style="font-size:12px;color:var(--muted);">${d.value?fmtMoney(d.value)+' · ':''}${d.contacts?d.contacts.first_name+' '+d.contacts.last_name:''}</div></div><div style="text-align:right;">${stageBadge(d.stage)}<div style="font-size:11px;color:var(--muted);margin-top:4px;">${d.employees?d.employees.first_name+' '+d.employees.last_name:d.owner_id}</div></div></div>`).join(''):'<div class="empty-state"><i class="ti ti-trending-up"></i>No deals.</div>';
+}
+async function loadAdminMeetings(){
+  const emp=document.getElementById('adm-meeting-emp-filter').value;
+  let q=sb.from('meetings').select('*,contacts(first_name,last_name),employees(first_name,last_name)').order('meeting_date',{ascending:false});if(emp)q=q.eq('owner_id',emp);
+  const{data}=await q;
+  document.getElementById('adm-meetings-list').innerHTML=data&&data.length?data.map(m=>`<div class="contact-card"><div style="width:44px;text-align:center;flex-shrink:0;"><div style="font-size:18px;font-weight:500;color:var(--gold-dark);">${new Date(m.meeting_date).getDate()}</div><div style="font-size:10px;color:var(--muted);">${new Date(m.meeting_date).toLocaleDateString([],{month:'short'})}</div></div><div style="flex:1;"><div style="font-size:14px;font-weight:500;">${m.title}</div><div style="font-size:12px;color:var(--muted);">${fmtTime(m.meeting_date)}${m.contacts?' · '+m.contacts.first_name+' '+m.contacts.last_name:''}</div></div><div style="font-size:11px;color:var(--muted);">${m.employees?m.employees.first_name+' '+m.employees.last_name:m.owner_id}</div></div>`).join(''):'<div class="empty-state"><i class="ti ti-calendar-event"></i>No meetings.</div>';
+}
+async function loadAdminActivity(){
+  const emp=document.getElementById('adm-activity-emp-filter').value;
+  let q=sb.from('activities').select('*,contacts(first_name,last_name),employees(first_name,last_name)').order('created_at',{ascending:false}).limit(100);if(emp)q=q.eq('owner_id',emp);
+  const{data}=await q;renderActivityList(data||[],document.getElementById('adm-activity-list'));
+}
+
+async function renderAdminRoster(){const{data}=await sb.from('employees').select('*').eq('active',true).order('last_name');document.getElementById('emp-roster').innerHTML=data&&data.length?data.map(e=>`<div class="row"><div class="avatar" style="${avatarStyle(e.color)}">${initials(e)}</div><div style="flex:1;"><div style="font-size:14px;">${e.first_name} ${e.last_name} ${e.role==='admin'?'<span class="badge badge-admin">admin</span>':''}</div><div style="font-size:12px;color:var(--muted);">ID: <code>${e.employee_id}</code> · RunPayroll #: ${e.runpayroll_num||'—'}</div></div><button class="btn btn-sm" onclick="openEditUser('${e.employee_id}')"><i class="ti ti-edit"></i> Edit</button></div>`).join(''):'<p style="font-size:13px;color:var(--muted);">No employees.</p>';}
+function resetCreateForm(){['m-fname','m-lname','m-eid','m-rp','m-pw'].forEach(id=>document.getElementById(id).value='');document.getElementById('modal-err').textContent='';document.getElementById('confirm-card').style.display='none';document.getElementById('modal-footer').style.display='flex';}
+async function createUser(){const fn=document.getElementById('m-fname').value.trim(),ln=document.getElementById('m-lname').value.trim(),eid=document.getElementById('m-eid').value.trim().toUpperCase(),rp=document.getElementById('m-rp').value.trim();let pw=document.getElementById('m-pw').value.trim();if(!fn||!ln||!eid){document.getElementById('modal-err').textContent='Required.';return;}if(!pw)pw=genPw();const{error}=await sb.from('employees').insert({employee_id:eid,first_name:fn,last_name:ln,password_hash:pw,runpayroll_num:rp,color:Math.floor(Math.random()*COLORS.length)});if(error){document.getElementById('modal-err').textContent=error.code==='23505'?'ID already in use.':'Error: '+error.message;return;}document.getElementById('cc-name').textContent=fn+' '+ln;document.getElementById('cc-id').textContent=eid;document.getElementById('cc-pw').textContent=pw;document.getElementById('cc-rp').textContent=rp||'Not set';document.getElementById('confirm-card').style.display='block';document.getElementById('modal-footer').style.display='none';renderAdminRoster();}
+function copyCredentials(){const text=`MedNova Partners
+Name: ${document.getElementById('cc-name').textContent}
+Employee ID: ${document.getElementById('cc-id').textContent}
+Password: ${document.getElementById('cc-pw').textContent}`;navigator.clipboard.writeText(text).then(()=>{const b=event.target.closest('button');const o=b.innerHTML;b.innerHTML='Copied!';setTimeout(()=>b.innerHTML=o,2000);}).catch(()=>alert(text));}
+async function openEditUser(eid){const{data}=await sb.from('employees').select('*').eq('employee_id',eid).single();if(!data)return;editingUserId=eid;document.getElementById('eu-fname').value=data.first_name;document.getElementById('eu-lname').value=data.last_name;document.getElementById('eu-eid').value=data.employee_id;document.getElementById('eu-rp').value=data.runpayroll_num||'';document.getElementById('eu-pw').value='';document.getElementById('eu-err').textContent='';openModal('edit-user-modal');}
+async function saveEditUser(){const fn=document.getElementById('eu-fname').value.trim(),ln=document.getElementById('eu-lname').value.trim(),eid=document.getElementById('eu-eid').value.trim().toUpperCase(),rp=document.getElementById('eu-rp').value.trim(),pw=document.getElementById('eu-pw').value.trim();if(!fn||!ln||!eid){document.getElementById('eu-err').textContent='Required.';return;}const updates={first_name:fn,last_name:ln,employee_id:eid,runpayroll_num:rp};if(pw)updates.password_hash=pw;const{error}=await sb.from('employees').update(updates).eq('employee_id',editingUserId);if(error){document.getElementById('eu-err').textContent='Error: '+error.message;return;}closeModal('edit-user-modal');renderAdminRoster();}
+async function deactivateUser(){if(!confirm('Deactivate?'))return;await sb.from('employees').update({active:false}).eq('employee_id',editingUserId);closeModal('edit-user-modal');renderAdminRoster();}
+
+async function generateExport(){
+  const start=document.getElementById('exp-start').value,end=document.getElementById('exp-end').value,code=document.getElementById('exp-code').value||'01';
+  if(!start||!end){document.getElementById('exp-err').textContent='Select dates.';return;}
+  document.getElementById('exp-err').textContent='';
+  const endDate=new Date(end);endDate.setHours(23,59,59);
+  const{data}=await sb.from('shifts').select('*,employees(first_name,last_name,runpayroll_num)').gte('clock_in',new Date(start).toISOString()).lte('clock_in',endDate.toISOString()).not('clock_out','is',null);
+  if(!data||!data.length){document.getElementById('exp-err').textContent='No shifts in range.';return;}
+  const endStr=`${String(endDate.getMonth()+1).padStart(2,'0')}/${String(endDate.getDate()).padStart(2,'0')}/${endDate.getFullYear()}`;
+  const byEmp={};data.forEach(s=>{if(!byEmp[s.employee_id])byEmp[s.employee_id]={emp:s.employees,hrs:0};byEmp[s.employee_id].hrs+=(new Date(s.clock_out)-new Date(s.clock_in))/3600000;});
+  const content=['TC','00001',...Object.values(byEmp).map(({emp,hrs})=>`${endStr}, ${emp.runpayroll_num||'?'}, ${emp.last_name}, ${emp.first_name}, ${code}, ${hrs.toFixed(2)}`)].join('\n');
+  document.getElementById('exp-preview').textContent=content;
+  const s=new Date(start),e=new Date(end);
+  const fmt=d=>`${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}${d.getFullYear()}`;
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:'text/csv'}));a.download=`Biweekly-${fmt(s)}-${fmt(e)}.csv`;a.click();
+}
+</script>
+</body>
 </html>
