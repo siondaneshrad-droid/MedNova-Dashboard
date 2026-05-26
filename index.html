@@ -616,7 +616,30 @@ function crmTab(t){
   else if(t==='tasks')loadTasks();
   else if(t==='activity')loadActivity();
 }
-function closeModal(id){hide(id);}
+function openModal(id){const el=document.getElementById(id);if(el)el.style.display='flex';}
+function closeModal(id){const el=document.getElementById(id);if(el)el.style.display='none';}
+function adminMainTab(t){
+  ['timeclock','crm','employees'].forEach(n=>{const el=document.getElementById('admin-section-'+n);if(el)el.style.display=n===t?'':'none';});
+  document.querySelectorAll('#screen-admin .main-tab').forEach((b,i)=>b.classList.toggle('active',['timeclock','crm','employees'][i]===t));
+  if(t==='timeclock')renderAdminDashboard();
+  else if(t==='crm')initAdminCrm();
+  else if(t==='employees')renderAdminRoster();
+}
+function adminClockTab(t){
+  ['dashboard','timesheets','export'].forEach(n=>{const el=document.getElementById('atab-'+n);if(el)el.style.display=n===t?'':'none';});
+  document.querySelectorAll('#admin-section-timeclock .tab').forEach((b,i)=>b.classList.toggle('active',['dashboard','timesheets','export'][i]===t));
+  if(t==='timesheets')renderAdminTimesheets();
+}
+const ADMIN_CRM_TABS=['overview','contacts','deals','meetings','activity'];
+function adminCrmTab(t){
+  ADMIN_CRM_TABS.forEach(n=>{const el=document.getElementById('admin-crm-'+n);if(el)el.style.display=n===t?'':'none';});
+  document.querySelectorAll('#admin-section-crm .tab').forEach((b,i)=>b.classList.toggle('active',ADMIN_CRM_TABS[i]===t));
+  if(t==='overview')loadAdminCrmOverview();
+  else if(t==='contacts')loadAdminContacts();
+  else if(t==='deals')loadAdminDeals();
+  else if(t==='meetings')loadAdminMeetings();
+  else if(t==='activity')loadAdminActivity();
+}
 
 // ─── AUTH ────────────────────────────────────────────────
 async function doLogin(){

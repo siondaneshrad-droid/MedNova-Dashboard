@@ -1,0 +1,17 @@
+{
+  "name": "MedNova Partners",
+  "short_name": "MedNova",
+  "description": "MedNova Partners - Time Clock and CRM",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAFAF8",
+  "theme_color": "#C4A052",
+  "icons": [
+    {
+      "src": "https://mednovapartners.com/images/MedNova-Logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
