@@ -3,22 +3,19 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>MedNova Partners — Time Clock</title>
+<title>MedNova Partners</title>
+<link rel="icon" type="image/svg+xml" href="https://mednovapartners.com/images/MedNova-Logo.svg"/>
+<link rel="apple-touch-icon" href="https://mednovapartners.com/images/MedNova-Logo.svg"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="MedNova"/>
+<meta name="theme-color" content="#C4A052"/>
+<link rel="manifest" href="manifest.json"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --gold:#C4A052;--gold-dark:#8B6B2A;--gold-light:#F0E6C8;--gold-mid:#D4B86A;
-  --bg:#FAFAF8;--surface:#fff;--border:#E8E4DC;--text:#2C2C2A;--muted:#888780;
-  --green-bg:#EAF3DE;--green-text:#3B6D11;--green-border:#97C459;
-  --red-bg:#FCEBEB;--red-text:#A32D2D;--red-border:#F09595;
-  --blue-bg:#E6F1FB;--blue-text:#0C447C;--blue-border:#85B7EB;
-  --r:10px;--rs:6px;
-}
+:root{--gold:#C4A052;--gold-dark:#8B6B2A;--gold-light:#F0E6C8;--gold-mid:#D4B86A;--bg:#FAFAF8;--surface:#fff;--border:#E8E4DC;--text:#2C2C2A;--muted:#888780;--green-bg:#EAF3DE;--green-text:#3B6D11;--green-border:#97C459;--red-bg:#FCEBEB;--red-text:#A32D2D;--red-border:#F09595;--blue-bg:#E6F1FB;--blue-text:#0C447C;--purple-bg:#EEEDFE;--purple-text:#3C3489;--orange-bg:#FEF3E6;--orange-text:#8B4A0A;--r:10px;--rs:6px;}
 body{font-family:'Georgia',serif;background:var(--bg);color:var(--text);min-height:100vh;}
-[data-hidden],[data-screen]{display:none;}
-.hidden{display:none!important;}
 input,select,textarea{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--rs);font-size:14px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;transition:border .15s;}
 input:focus,select:focus,textarea:focus{border-color:var(--gold);}
 textarea{resize:vertical;min-height:70px;}
@@ -33,11 +30,20 @@ button{font-family:inherit;cursor:pointer;transition:all .15s;}
 .btn-out{background:var(--red-bg);border-color:var(--red-border);color:var(--red-text);font-weight:500;}
 .btn-ghost-red{background:transparent;border:1px solid var(--red-border);color:var(--red-text);}
 .btn-ghost-red:hover{background:var(--red-bg);}
-.badge{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:500;}
+.badge{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:500;display:inline-block;}
 .badge-in{background:var(--green-bg);color:var(--green-text);}
 .badge-out{background:#F5F3EE;color:var(--muted);}
 .badge-admin{background:var(--gold-light);color:var(--gold-dark);}
 .badge-edited{background:var(--blue-bg);color:var(--blue-text);font-size:10px;padding:2px 6px;}
+.badge-Lead{background:#F5F3EE;color:var(--muted);}
+.badge-Contacted{background:var(--blue-bg);color:var(--blue-text);}
+.badge-Meeting{background:var(--purple-bg);color:var(--purple-text);}
+.badge-Proposal{background:var(--orange-bg);color:var(--orange-text);}
+.badge-Won{background:var(--green-bg);color:var(--green-text);}
+.badge-Lost{background:var(--red-bg);color:var(--red-text);}
+.badge-high{background:var(--red-bg);color:var(--red-text);}
+.badge-medium{background:var(--orange-bg);color:var(--orange-text);}
+.badge-low{background:var(--green-bg);color:var(--green-text);}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem;}
 .lbl{font-size:12px;color:var(--muted);margin-bottom:5px;display:block;letter-spacing:.03em;}
 .err{color:var(--red-text);font-size:12px;margin-top:5px;min-height:16px;}
@@ -47,321 +53,481 @@ button{font-family:inherit;cursor:pointer;transition:all .15s;}
 .metric{background:var(--gold-light);border-radius:var(--rs);padding:1rem;text-align:center;}
 .metric-val{font-size:24px;color:var(--gold-dark);}
 .metric-lbl{font-size:11px;color:#A07840;margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em;}
-/* Nav */
-.nav{display:flex;align-items:center;justify-content:space-between;padding:13px 20px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20;}
 .nav-logo{display:flex;align-items:center;gap:10px;}
-.nav-logo img{height:34px;}
-.nav-logo-text{font-size:15px;color:var(--gold-dark);}
-.nav-logo-sub{font-size:11px;color:var(--muted);}
+.nav-logo img{height:30px;}
+.nav-logo-text{font-size:14px;color:var(--gold-dark);}
+.nav-logo-sub{font-size:10px;color:var(--muted);}
 .nav-right{display:flex;align-items:center;gap:8px;font-size:13px;}
-/* Tabs */
-.tab-bar{display:flex;border-bottom:1px solid var(--border);margin-bottom:1.5rem;}
-.tab{flex:1;padding:11px 6px;font-size:13px;background:transparent;border:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;font-family:inherit;}
+.main-tabs{display:flex;background:var(--surface);border-bottom:2px solid var(--border);}
+.main-tab{flex:1;padding:13px 8px;font-size:14px;font-weight:500;background:transparent;border:none;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .15s;font-family:inherit;}
+.main-tab.active{color:var(--gold-dark);border-bottom:3px solid var(--gold);}
+.tab-bar{display:flex;border-bottom:1px solid var(--border);margin-bottom:1.25rem;overflow-x:auto;}
+.tab{flex:1;min-width:60px;padding:10px 6px;font-size:12px;background:transparent;border:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;font-family:inherit;white-space:nowrap;}
 .tab.active{color:var(--gold-dark);border-bottom:2px solid var(--gold);}
-/* Main */
-.main{max-width:740px;margin:0 auto;padding:1.5rem 1rem 3rem;}
+.main{max-width:760px;margin:0 auto;padding:1.25rem 1rem 4rem;}
 .sec-label{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:10px;}
-/* Login */
 .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem;}
 .login-box{width:100%;max-width:400px;}
 .login-hero{background:var(--gold-light);border:1px solid var(--gold-mid);border-radius:var(--r);padding:2rem 1.5rem;text-align:center;margin-bottom:1.25rem;}
-.login-hero img{height:58px;margin-bottom:12px;}
-.login-hero h1{font-size:18px;color:var(--gold-dark);margin-bottom:5px;}
-.login-hero p{font-size:13px;color:#A07840;}
-/* Clock */
-.clock-time{font-size:46px;color:var(--gold-dark);letter-spacing:3px;font-family:'Courier New',monospace;}
-.clock-date{font-size:14px;color:var(--muted);margin-top:5px;}
+.login-hero img{height:56px;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto;}
+.clock-time{font-size:44px;color:var(--gold-dark);letter-spacing:3px;font-family:'Courier New',monospace;}
+.clock-date{font-size:13px;color:var(--muted);margin-top:5px;}
 .clock-shift{font-size:14px;color:var(--gold-dark);font-weight:500;margin-top:7px;min-height:20px;}
-/* Timesheet */
 .ts-day{margin-bottom:1rem;}
-.ts-day-header{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--gold-light);border-radius:var(--rs);margin-bottom:6px;font-size:14px;}
-.ts-day-date{font-weight:500;color:var(--gold-dark);}
-.ts-day-total{font-size:13px;color:#A07840;}
-.ts-punch{display:flex;align-items:center;gap:10px;padding:7px 12px;font-size:13px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);margin-bottom:4px;}
-.ts-punch-time{font-family:'Courier New',monospace;font-size:13px;color:var(--text);min-width:120px;}
-.ts-punch-duration{color:var(--muted);font-size:12px;margin-left:auto;}
-/* Period selector */
+.ts-day-header{display:flex;justify-content:space-between;padding:8px 12px;background:var(--gold-light);border-radius:var(--rs);margin-bottom:6px;font-size:14px;}
+.ts-punch{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);margin-bottom:4px;font-size:13px;flex-wrap:wrap;}
 .period-nav{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;}
-.period-nav button{padding:6px 12px;font-size:13px;}
 .period-label{font-size:14px;font-weight:500;flex:1;text-align:center;color:var(--gold-dark);}
-/* Modal */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.38);display:flex;align-items:center;justify-content:center;z-index:50;padding:1rem;}
-.modal{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);width:100%;max-width:500px;max-height:90vh;overflow-y:auto;}
-.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);}
+.pipeline{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;}
+.pipeline-col{min-width:148px;flex:1;background:var(--bg);border:1px solid var(--border);border-radius:var(--rs);padding:10px;}
+.pipeline-col-hd{font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;display:flex;justify-content:space-between;}
+.pipeline-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px;margin-bottom:6px;cursor:pointer;}
+.pipeline-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.08);}
+.pipeline-card-title{font-size:13px;font-weight:500;margin-bottom:4px;}
+.pipeline-card-meta{font-size:11px;color:var(--muted);}
+.contact-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:12px;margin-bottom:8px;cursor:pointer;display:flex;align-items:flex-start;gap:10px;}
+.contact-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.08);}
+.activity-item{padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;gap:10px;}
+.activity-item:last-child{border-bottom:none;}
+.activity-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:2px;}
+.task-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.task-row:last-child{border-bottom:none;}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:100;padding:1rem;}
+.modal{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);width:100%;max-width:560px;max-height:92vh;overflow-y:auto;}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2;}
 .modal-hd h2{font-size:16px;font-weight:500;}
 .modal-bd{padding:1.25rem;}
 .modal-ft{padding:1rem 1.25rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;position:sticky;bottom:0;background:var(--surface);}
-/* Confirm card */
 .confirm-card{background:var(--gold-light);border:1px solid var(--gold-mid);border-radius:var(--rs);padding:1.25rem;margin-top:1rem;}
 .cred-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--gold-mid);font-size:14px;}
 .cred-row:last-of-type{border-bottom:none;}
 .cred-label{color:#A07840;font-size:12px;}
 .cred-val{font-family:'Courier New',monospace;color:var(--gold-dark);font-weight:500;}
-/* Audit log */
-.audit-row{padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
-.audit-row:last-child{border-bottom:none;}
-.audit-meta{font-size:11px;color:var(--muted);margin-top:3px;}
-/* Spinner */
-.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;}
+.search-box{position:relative;margin-bottom:1rem;}
+.search-box input{padding-left:34px;}
+.search-box i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:16px;}
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--muted);}
+.empty-state i{font-size:40px;display:block;margin-bottom:10px;opacity:.4;}
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;}
 @keyframes spin{to{transform:rotate(360deg);}}
 code{font-family:'Courier New',monospace;background:#F5F3EE;padding:1px 5px;border-radius:3px;font-size:12px;}
+@media(max-width:600px){.pipeline{flex-direction:column;}.pipeline-col{min-width:unset;}}
 </style>
 </head>
 <body>
 
-<!-- ============ SCREENS ============ -->
-
 <!-- LOGIN -->
 <div id="screen-login">
-  <div class="login-wrap">
-    <div class="login-box">
-      <div class="login-hero">
-        <img src="https://mednovapartners.com/images/MedNova-Logo.svg" alt="" style="height:56px;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto;" onerror="this.style.display='none';"/>
-        <div style="font-size:22px;font-weight:500;color:var(--gold-dark);margin-bottom:4px;">MedNova Partners</div>
-        <h1 style="font-size:15px;font-weight:400;color:var(--gold-dark);margin-bottom:6px;">Employee Time Clock</h1>
-        <p>Driving Growth and Inspiring Change in Healthcare</p>
-      </div>
-      <div class="card">
-        <div style="margin-bottom:1rem;"><label class="lbl"><i class="ti ti-id-badge"></i> Employee ID</label><input id="login-id" type="text" placeholder="e.g. 001" onkeydown="if(event.key==='Enter')doLogin()"/></div>
-        <div style="margin-bottom:1rem;"><label class="lbl"><i class="ti ti-lock"></i> Password</label><input id="login-pw" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
-        <div class="err" id="login-err"></div>
-        <button class="btn btn-gold btn-block" style="margin-top:8px;" onclick="doLogin()"><span id="login-btn-text">Sign in</span></button>
-      </div>
-      <p style="text-align:center;font-size:12px;color:var(--muted);margin-top:14px;">Need help? Contact your manager.</p>
-    </div>
+<div class="login-wrap"><div class="login-box">
+  <div class="login-hero">
+    <img src="https://mednovapartners.com/images/MedNova-Logo.svg" alt="" onerror="this.style.display='none';"/>
+    <div style="font-size:22px;font-weight:500;color:var(--gold-dark);margin-bottom:4px;">MedNova Partners</div>
+    <div style="font-size:14px;color:var(--gold-dark);margin-bottom:5px;">Employee Portal</div>
+    <p style="font-size:12px;color:#A07840;">Driving Growth and Inspiring Change in Healthcare</p>
   </div>
+  <div class="card">
+    <div style="margin-bottom:1rem;"><label class="lbl"><i class="ti ti-id-badge"></i> Employee ID</label><input id="login-id" type="text" placeholder="e.g. 001" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <div style="margin-bottom:1rem;"><label class="lbl"><i class="ti ti-lock"></i> Password</label><input id="login-pw" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <div class="err" id="login-err"></div>
+    <button class="btn btn-gold btn-block" style="margin-top:8px;" onclick="doLogin()"><span id="login-btn-text">Sign in</span></button>
+  </div>
+  <p style="text-align:center;font-size:12px;color:var(--muted);margin-top:14px;">Need help? Contact your manager.</p>
+</div></div>
 </div>
 
-<!-- EMPLOYEE APP -->
+<!-- EMPLOYEE -->
 <div id="screen-employee" style="display:none;">
   <div class="nav">
     <div class="nav-logo">
       <img src="https://mednovapartners.com/images/MedNova-Logo.svg" alt="MedNova" onerror="this.style.display='none';"/>
-      <div><div class="nav-logo-text">MedNova Partners</div><div class="nav-logo-sub">Time Clock</div></div>
+      <div><div class="nav-logo-text">MedNova Partners</div><div class="nav-logo-sub" id="emp-nav-sub"></div></div>
     </div>
     <div class="nav-right">
-      <span id="emp-nav-name" style="font-size:13px;color:var(--muted);"></span>
       <span class="badge" id="emp-nav-badge"></span>
       <button class="btn btn-sm" onclick="logout()">Sign out</button>
     </div>
   </div>
-  <div class="main">
-    <div class="tab-bar">
-      <button class="tab active" onclick="empTab('clock')"><i class="ti ti-clock"></i> Clock</button>
-      <button class="tab" onclick="empTab('timesheet')"><i class="ti ti-calendar"></i> My timesheet</button>
+  <div class="main-tabs">
+    <button class="main-tab active" onclick="mainTab('timeclock')"><i class="ti ti-clock"></i> Time Clock</button>
+    <button class="main-tab" onclick="mainTab('crm')"><i class="ti ti-address-book"></i> CRM</button>
+  </div>
+  <div id="emp-section-timeclock">
+    <div class="main">
+      <div class="tab-bar">
+        <button class="tab active" onclick="empClockTab('clock')"><i class="ti ti-clock"></i> Clock</button>
+        <button class="tab" onclick="empClockTab('timesheet')"><i class="ti ti-calendar"></i> Timesheet</button>
+      </div>
+      <div id="etab-clock">
+        <div style="text-align:center;padding:2rem 0 1.5rem;">
+          <div class="clock-time" id="emp-clock">00:00:00</div>
+          <div class="clock-date" id="emp-date"></div>
+          <div class="clock-shift" id="emp-shift-msg"></div>
+        </div>
+        <div style="display:flex;gap:12px;margin-bottom:1.5rem;">
+          <button id="btn-in" class="btn btn-in btn-block" onclick="clockIn()" style="flex:1;font-size:15px;"><i class="ti ti-login"></i> Clock in</button>
+          <button id="btn-out" class="btn btn-out btn-block" onclick="clockOut()" style="flex:1;font-size:15px;"><i class="ti ti-logout"></i> Clock out</button>
+        </div>
+        <div class="card"><div class="sec-label">Today's punches</div><div id="today-punches"><p style="font-size:13px;color:var(--muted);">No punches today.</p></div></div>
+      </div>
+      <div id="etab-timesheet" style="display:none;">
+        <div class="period-nav">
+          <button class="btn btn-sm" onclick="shiftPeriod(-1)"><i class="ti ti-chevron-left"></i></button>
+          <div class="period-label" id="emp-period-label"></div>
+          <button class="btn btn-sm" onclick="shiftPeriod(1)"><i class="ti ti-chevron-right"></i></button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.5rem;">
+          <div class="metric"><div class="metric-lbl">Regular hrs</div><div class="metric-val" id="emp-reg-hrs">0</div></div>
+          <div class="metric"><div class="metric-lbl">Overtime</div><div class="metric-val" id="emp-ot-hrs">0</div></div>
+          <div class="metric"><div class="metric-lbl">Days worked</div><div class="metric-val" id="emp-days">0</div></div>
+        </div>
+        <div id="emp-ts-days"></div>
+      </div>
     </div>
-    <!-- Clock tab -->
-    <div id="etab-clock">
-      <div style="text-align:center;padding:2rem 0 1.5rem;">
-        <div class="clock-time" id="emp-clock">00:00:00</div>
-        <div class="clock-date" id="emp-date"></div>
-        <div class="clock-shift" id="emp-shift-msg"></div>
+  </div>
+  <div id="emp-section-crm" style="display:none;">
+    <div class="main">
+      <div class="tab-bar">
+        <button class="tab active" onclick="crmTab('dashboard')"><i class="ti ti-dashboard"></i> Overview</button>
+        <button class="tab" onclick="crmTab('contacts')"><i class="ti ti-users"></i> Contacts</button>
+        <button class="tab" onclick="crmTab('companies')"><i class="ti ti-building"></i> Companies</button>
+        <button class="tab" onclick="crmTab('deals')"><i class="ti ti-trending-up"></i> Deals</button>
+        <button class="tab" onclick="crmTab('meetings')"><i class="ti ti-calendar-event"></i> Meetings</button>
+        <button class="tab" onclick="crmTab('tasks')"><i class="ti ti-checkbox"></i> Tasks</button>
+        <button class="tab" onclick="crmTab('activity')"><i class="ti ti-activity"></i> Activity</button>
       </div>
-      <div style="display:flex;gap:12px;margin-bottom:1.5rem;">
-        <button id="btn-in" class="btn btn-in btn-block" onclick="clockIn()" style="flex:1;font-size:15px;"><i class="ti ti-login"></i> Clock in</button>
-        <button id="btn-out" class="btn btn-out btn-block" onclick="clockOut()" style="flex:1;font-size:15px;"><i class="ti ti-logout"></i> Clock out</button>
+      <div id="crm-dashboard">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:1.5rem;">
+          <div class="metric"><div class="metric-lbl">Contacts</div><div class="metric-val" id="crm-stat-contacts">-</div></div>
+          <div class="metric"><div class="metric-lbl">Companies</div><div class="metric-val" id="crm-stat-companies">-</div></div>
+          <div class="metric"><div class="metric-lbl">Open deals</div><div class="metric-val" id="crm-stat-deals">-</div></div>
+          <div class="metric"><div class="metric-lbl">Pipeline $</div><div class="metric-val" id="crm-stat-value">-</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+          <div class="card"><div class="sec-label">Upcoming meetings</div><div id="crm-upcoming-meetings"><div class="spinner"></div></div></div>
+          <div class="card"><div class="sec-label">Open tasks</div><div id="crm-open-tasks"><div class="spinner"></div></div></div>
+        </div>
+        <div class="card"><div class="sec-label">Recent activity</div><div id="crm-recent-activity"><div class="spinner"></div></div></div>
       </div>
-      <div class="card">
-        <div class="sec-label">Today's punches</div>
-        <div id="today-punches"><p style="font-size:13px;color:var(--muted);">No punches today.</p></div>
+      <div id="crm-contacts" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+          <div style="font-size:15px;font-weight:500;">Contacts</div>
+          <button class="btn btn-gold btn-sm" onclick="openModal('contact-modal');resetContactForm()"><i class="ti ti-plus"></i> Add</button>
+        </div>
+        <div class="search-box"><i class="ti ti-search"></i><input id="contact-search" type="text" placeholder="Search..." oninput="filterContacts()"/></div>
+        <div id="contacts-list"><div class="spinner"></div></div>
       </div>
-    </div>
-    <!-- Timesheet tab -->
-    <div id="etab-timesheet" style="display:none;">
-      <div class="period-nav">
-        <button class="btn btn-sm" onclick="shiftPeriod(-1)"><i class="ti ti-chevron-left"></i></button>
-        <div class="period-label" id="emp-period-label"></div>
-        <button class="btn btn-sm" onclick="shiftPeriod(1)"><i class="ti ti-chevron-right"></i></button>
+      <div id="crm-companies" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+          <div style="font-size:15px;font-weight:500;">Companies & Buildings</div>
+          <button class="btn btn-gold btn-sm" onclick="openModal('company-modal');resetCompanyForm()"><i class="ti ti-plus"></i> Add</button>
+        </div>
+        <div class="search-box"><i class="ti ti-search"></i><input id="company-search" type="text" placeholder="Search..." oninput="filterCompanies()"/></div>
+        <div id="companies-list"><div class="spinner"></div></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:1.5rem;">
-        <div class="metric"><div class="metric-lbl">Regular hrs</div><div class="metric-val" id="emp-reg-hrs">0</div></div>
-        <div class="metric"><div class="metric-lbl">Overtime hrs</div><div class="metric-val" id="emp-ot-hrs">0</div></div>
-        <div class="metric"><div class="metric-lbl">Days worked</div><div class="metric-val" id="emp-days">0</div></div>
+      <div id="crm-deals" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+          <div style="font-size:15px;font-weight:500;">Deal Pipeline</div>
+          <button class="btn btn-gold btn-sm" onclick="openModal('deal-modal');resetDealForm()"><i class="ti ti-plus"></i> Add</button>
+        </div>
+        <div id="deals-pipeline"><div class="spinner"></div></div>
       </div>
-      <div id="emp-ts-days"><p style="font-size:13px;color:var(--muted);">No shifts this period.</p></div>
+      <div id="crm-meetings" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+          <div style="font-size:15px;font-weight:500;">Meetings</div>
+          <button class="btn btn-gold btn-sm" onclick="openModal('meeting-modal');resetMeetingForm()"><i class="ti ti-plus"></i> Schedule</button>
+        </div>
+        <div id="meetings-list"><div class="spinner"></div></div>
+      </div>
+      <div id="crm-tasks" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+          <div style="font-size:15px;font-weight:500;">Tasks & Follow-ups</div>
+          <button class="btn btn-gold btn-sm" onclick="openModal('task-modal');resetTaskForm()"><i class="ti ti-plus"></i> Add</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:1rem;">
+          <button class="btn btn-sm" id="tf-open" onclick="setTaskFilter('open')" style="background:var(--gold-light);border-color:var(--gold);">Open</button>
+          <button class="btn btn-sm" id="tf-completed" onclick="setTaskFilter('completed')">Completed</button>
+          <button class="btn btn-sm" id="tf-all" onclick="setTaskFilter('all')">All</button>
+        </div>
+        <div id="tasks-list"><div class="spinner"></div></div>
+      </div>
+      <div id="crm-activity" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+          <div style="font-size:15px;font-weight:500;">Activity feed</div>
+          <button class="btn btn-gold btn-sm" onclick="openModal('note-modal')"><i class="ti ti-plus"></i> Log</button>
+        </div>
+        <div id="activity-list"><div class="spinner"></div></div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ADMIN APP -->
+<!-- ADMIN -->
 <div id="screen-admin" style="display:none;">
   <div class="nav">
     <div class="nav-logo">
       <img src="https://mednovapartners.com/images/MedNova-Logo.svg" alt="MedNova" onerror="this.style.display='none';"/>
-      <div><div class="nav-logo-text">MedNova Partners</div><div class="nav-logo-sub">Admin Dashboard</div></div>
+      <div><div class="nav-logo-text">MedNova Partners</div><div class="nav-logo-sub">Admin Portal</div></div>
     </div>
     <div class="nav-right">
       <span class="badge badge-admin"><i class="ti ti-shield" style="font-size:11px;"></i> Admin</span>
       <button class="btn btn-sm" onclick="logout()">Sign out</button>
     </div>
   </div>
-  <div class="main">
-    <div class="tab-bar">
-      <button class="tab active" onclick="adminTab('dashboard')"><i class="ti ti-layout-dashboard"></i> Dashboard</button>
-      <button class="tab" onclick="adminTab('timesheets')"><i class="ti ti-clock"></i> Timesheets</button>
-      <button class="tab" onclick="adminTab('employees')"><i class="ti ti-users"></i> Employees</button>
-      <button class="tab" onclick="adminTab('export')"><i class="ti ti-download"></i> Export</button>
-    </div>
-
-    <!-- Dashboard -->
-    <div id="atab-dashboard" class="atab">
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:1.5rem;">
-        <div class="metric"><div class="metric-lbl">Employees</div><div class="metric-val" id="stat-emp">—</div></div>
-        <div class="metric"><div class="metric-lbl">Clocked in</div><div class="metric-val" id="stat-in">—</div></div>
-        <div class="metric"><div class="metric-lbl">Hrs this period</div><div class="metric-val" id="stat-hrs">—</div></div>
-        <div class="metric"><div class="metric-lbl">Shifts</div><div class="metric-val" id="stat-shifts">—</div></div>
+  <div class="main-tabs">
+    <button class="main-tab active" onclick="adminMainTab('timeclock')"><i class="ti ti-clock"></i> Time Clock</button>
+    <button class="main-tab" onclick="adminMainTab('crm')"><i class="ti ti-address-book"></i> CRM</button>
+    <button class="main-tab" onclick="adminMainTab('employees')"><i class="ti ti-users"></i> Employees</button>
+  </div>
+  <div id="admin-section-timeclock">
+    <div class="main">
+      <div class="tab-bar">
+        <button class="tab active" onclick="adminClockTab('dashboard')"><i class="ti ti-layout-dashboard"></i> Dashboard</button>
+        <button class="tab" onclick="adminClockTab('timesheets')"><i class="ti ti-clock"></i> Timesheets</button>
+        <button class="tab" onclick="adminClockTab('export')"><i class="ti ti-download"></i> Export</button>
       </div>
-      <div class="card"><div class="sec-label">Live status</div><div id="dash-status"><div class="spinner"></div></div></div>
-    </div>
-
-    <!-- Timesheets (admin) -->
-    <div id="atab-timesheets" class="atab" style="display:none;">
-      <div style="display:flex;gap:10px;align-items:center;margin-bottom:1rem;flex-wrap:wrap;">
-        <div class="period-nav" style="margin:0;flex:1;">
-          <button class="btn btn-sm" onclick="adminShiftPeriod(-1)"><i class="ti ti-chevron-left"></i></button>
-          <div class="period-label" id="admin-period-label" style="font-size:14px;"></div>
-          <button class="btn btn-sm" onclick="adminShiftPeriod(1)"><i class="ti ti-chevron-right"></i></button>
+      <div id="atab-dashboard">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:1.5rem;">
+          <div class="metric"><div class="metric-lbl">Employees</div><div class="metric-val" id="stat-emp">-</div></div>
+          <div class="metric"><div class="metric-lbl">Clocked in</div><div class="metric-val" id="stat-in">-</div></div>
+          <div class="metric"><div class="metric-lbl">Hrs this period</div><div class="metric-val" id="stat-hrs">-</div></div>
+          <div class="metric"><div class="metric-lbl">Shifts</div><div class="metric-val" id="stat-shifts">-</div></div>
         </div>
-        <select id="admin-ts-filter" style="width:auto;font-size:13px;padding:7px 10px;" onchange="renderAdminTimesheets()">
-          <option value="">All employees</option>
-        </select>
+        <div class="card"><div class="sec-label">Live status</div><div id="dash-status"><div class="spinner"></div></div></div>
       </div>
-      <div id="admin-ts-content"><div class="spinner"></div></div>
+      <div id="atab-timesheets" style="display:none;">
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:1rem;flex-wrap:wrap;">
+          <div class="period-nav" style="margin:0;flex:1;">
+            <button class="btn btn-sm" onclick="adminShiftPeriod(-1)"><i class="ti ti-chevron-left"></i></button>
+            <div class="period-label" id="admin-period-label"></div>
+            <button class="btn btn-sm" onclick="adminShiftPeriod(1)"><i class="ti ti-chevron-right"></i></button>
+          </div>
+          <select id="admin-ts-filter" style="width:auto;font-size:13px;padding:7px 10px;" onchange="renderAdminTimesheets()"><option value="">All employees</option></select>
+        </div>
+        <div id="admin-ts-content"><div class="spinner"></div></div>
+      </div>
+      <div id="atab-export" style="display:none;">
+        <div class="card" style="margin-bottom:1rem;">
+          <div class="sec-label">RunPayroll export</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+            <div><label class="lbl">Period start</label><input id="exp-start" type="date"/></div>
+            <div><label class="lbl">Period end</label><input id="exp-end" type="date"/></div>
+          </div>
+          <div style="margin-bottom:14px;"><label class="lbl">Earnings code</label><input id="exp-code" type="text" value="01" style="width:80px;"/></div>
+          <button class="btn btn-gold" onclick="generateExport()"><i class="ti ti-download"></i> Download .csv</button>
+          <div class="err" id="exp-err" style="margin-top:8px;"></div>
+        </div>
+        <pre id="exp-preview" style="font-size:12px;font-family:'Courier New',monospace;color:var(--muted);white-space:pre-wrap;line-height:1.7;background:var(--bg);padding:12px;border-radius:var(--rs);border:1px solid var(--border);">Select a date range to preview.</pre>
+      </div>
     </div>
-
-    <!-- Employees -->
-    <div id="atab-employees" class="atab" style="display:none;">
+  </div>
+  <div id="admin-section-crm" style="display:none;">
+    <div class="main">
+      <div class="tab-bar">
+        <button class="tab active" onclick="adminCrmTab('overview')"><i class="ti ti-dashboard"></i> Overview</button>
+        <button class="tab" onclick="adminCrmTab('contacts')"><i class="ti ti-users"></i> Contacts</button>
+        <button class="tab" onclick="adminCrmTab('deals')"><i class="ti ti-trending-up"></i> Deals</button>
+        <button class="tab" onclick="adminCrmTab('meetings')"><i class="ti ti-calendar-event"></i> Meetings</button>
+        <button class="tab" onclick="adminCrmTab('activity')"><i class="ti ti-activity"></i> Activity</button>
+      </div>
+      <div id="admin-crm-overview">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:1.5rem;">
+          <div class="metric"><div class="metric-lbl">Total contacts</div><div class="metric-val" id="adm-crm-contacts">-</div></div>
+          <div class="metric"><div class="metric-lbl">Total deals</div><div class="metric-val" id="adm-crm-deals">-</div></div>
+          <div class="metric"><div class="metric-lbl">Won deals</div><div class="metric-val" id="adm-crm-won">-</div></div>
+          <div class="metric"><div class="metric-lbl">Pipeline $</div><div class="metric-val" id="adm-crm-value">-</div></div>
+        </div>
+        <div class="card" style="margin-bottom:1rem;">
+          <div class="sec-label">Pipeline by stage</div>
+          <div id="adm-pipeline-breakdown"><div class="spinner"></div></div>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <div class="sec-label" style="margin:0;">Activity by employee</div>
+            <select id="adm-emp-filter" style="width:auto;font-size:13px;padding:5px 8px;" onchange="loadAdminCrmOverview()"><option value="">All employees</option></select>
+          </div>
+          <div id="adm-emp-activity"><div class="spinner"></div></div>
+        </div>
+      </div>
+      <div id="admin-crm-contacts" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+          <div style="font-size:15px;font-weight:500;">All Contacts</div>
+          <select id="adm-contact-emp-filter" style="width:auto;font-size:13px;padding:7px 10px;" onchange="loadAdminContacts()"><option value="">All employees</option></select>
+        </div>
+        <div class="search-box"><i class="ti ti-search"></i><input id="adm-contact-search" type="text" placeholder="Search..." oninput="loadAdminContacts()"/></div>
+        <div id="adm-contacts-list"><div class="spinner"></div></div>
+      </div>
+      <div id="admin-crm-deals" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+          <div style="font-size:15px;font-weight:500;">All Deals</div>
+          <select id="adm-deal-emp-filter" style="width:auto;font-size:13px;padding:7px 10px;" onchange="loadAdminDeals()"><option value="">All employees</option></select>
+        </div>
+        <div id="adm-deals-list"><div class="spinner"></div></div>
+      </div>
+      <div id="admin-crm-meetings" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+          <div style="font-size:15px;font-weight:500;">All Meetings</div>
+          <select id="adm-meeting-emp-filter" style="width:auto;font-size:13px;padding:7px 10px;" onchange="loadAdminMeetings()"><option value="">All employees</option></select>
+        </div>
+        <div id="adm-meetings-list"><div class="spinner"></div></div>
+      </div>
+      <div id="admin-crm-activity" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+          <div style="font-size:15px;font-weight:500;">All Activity</div>
+          <select id="adm-activity-emp-filter" style="width:auto;font-size:13px;padding:7px 10px;" onchange="loadAdminActivity()"><option value="">All employees</option></select>
+        </div>
+        <div id="adm-activity-list"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+  <div id="admin-section-employees" style="display:none;">
+    <div class="main">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
         <div style="font-size:15px;font-weight:500;">Employee roster</div>
-        <button class="btn btn-gold btn-sm" onclick="openCreateModal()"><i class="ti ti-user-plus"></i> Create user</button>
+        <button class="btn btn-gold btn-sm" onclick="openModal('create-modal');resetCreateForm()"><i class="ti ti-user-plus"></i> Create user</button>
       </div>
       <div class="card"><div id="emp-roster"><div class="spinner"></div></div></div>
     </div>
-
-    <!-- Export -->
-    <div id="atab-export" class="atab" style="display:none;">
-      <div class="card" style="margin-bottom:1rem;">
-        <div class="sec-label">RunPayroll export (SurePayroll format)</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
-          <div><label class="lbl">Period start</label><input id="exp-start" type="date"/></div>
-          <div><label class="lbl">Period end</label><input id="exp-end" type="date"/></div>
-        </div>
-        <div style="margin-bottom:14px;"><label class="lbl">Regular earnings code (default: 01)</label><input id="exp-code" type="text" value="01" style="width:100px;"/></div>
-        <button class="btn btn-gold" onclick="generateExport()"><i class="ti ti-download"></i> Download .csv</button>
-        <div class="err" id="exp-err" style="margin-top:8px;"></div>
-      </div>
-      <div class="card" style="margin-bottom:1rem;">
-        <div class="sec-label">Preview</div>
-        <pre id="exp-preview" style="font-size:12px;font-family:'Courier New',monospace;color:var(--muted);white-space:pre-wrap;line-height:1.7;background:var(--bg);padding:12px;border-radius:var(--rs);border:1px solid var(--border);">Select a date range to preview.</pre>
-      </div>
-      <div class="card" style="border-left:3px solid var(--gold);border-radius:0 var(--r) var(--r) 0;font-size:13px;color:var(--muted);line-height:1.9;">
-        <strong style="color:var(--gold-dark);">How to import into RunPayroll</strong><br>
-        1. Go to <strong>Company → Time Clock Integration → Register</strong><br>
-        2. Select <strong>SurePayroll Format</strong><br>
-        3. On Payroll Entry click <strong>Import</strong> and upload the downloaded file
-      </div>
-    </div>
   </div>
 </div>
 
-<!-- ============ MODALS ============ -->
+<!-- MODALS -->
+<div class="overlay" id="contact-modal" style="display:none;"><div class="modal">
+  <div class="modal-hd"><h2 id="contact-modal-title"><i class="ti ti-user" style="color:var(--gold);margin-right:6px;"></i>Contact</h2><button class="btn" style="padding:4px 10px;font-size:20px;border:none;" onclick="closeModal('contact-modal')">&times;</button></div>
+  <div class="modal-bd">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;"><div><label class="lbl">First name *</label><input id="c-fname" type="text"/></div><div><label class="lbl">Last name *</label><input id="c-lname" type="text"/></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;"><div><label class="lbl">Title</label><input id="c-title" type="text" placeholder="e.g. Building Owner"/></div><div><label class="lbl">Company</label><select id="c-company"><option value="">Select...</option></select></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;"><div><label class="lbl">Phone</label><input id="c-phone" type="tel"/></div><div><label class="lbl">Email</label><input id="c-email" type="email"/></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+      <div><label class="lbl">Industry</label><select id="c-industry"><option value="">Select...</option><option>Healthcare Real Estate</option><option>Healthcare Staffing</option><option>Medical Device</option><option>Pharma</option><option>Hospital</option><option>Clinic</option><option>Other</option></select></div>
+      <div><label class="lbl">Lead source</label><select id="c-source"><option value="">Select...</option><option>Referral</option><option>Cold outreach</option><option>Conference</option><option>LinkedIn</option><option>Website</option><option>Other</option></select></div>
+    </div>
+    <div style="margin-bottom:12px;"><label class="lbl">Address</label><input id="c-address" type="text"/></div>
+    <div><label class="lbl">Notes</label><textarea id="c-notes"></textarea></div>
+    <div class="err" id="c-err" style="margin-top:8px;"></div>
+  </div>
+  <div class="modal-ft"><button class="btn btn-ghost-red btn-sm" id="c-delete-btn" style="margin-right:auto;display:none;" onclick="deleteContact()"><i class="ti ti-trash"></i></button><button class="btn" onclick="closeModal('contact-modal')">Cancel</button><button class="btn btn-gold" onclick="saveContact()">Save</button></div>
+</div></div>
 
-<!-- Edit shift modal (admin) -->
-<div class="overlay" style="display:none;" id="edit-shift-modal">
-  <div class="modal">
-    <div class="modal-hd">
-      <h2><i class="ti ti-edit" style="color:var(--gold);margin-right:6px;"></i> Edit shift</h2>
-      <button class="btn" style="padding:4px 10px;font-size:20px;border:none;" onclick="closeModal('edit-shift-modal')">&times;</button>
+<div class="overlay" id="company-modal" style="display:none;"><div class="modal">
+  <div class="modal-hd"><h2><i class="ti ti-building" style="color:var(--gold);margin-right:6px;"></i>Company</h2><button class="btn" style="padding:4px 10px;font-size:20px;border:none;" onclick="closeModal('company-modal')">&times;</button></div>
+  <div class="modal-bd">
+    <div style="margin-bottom:12px;"><label class="lbl">Company name *</label><input id="co-name" type="text"/></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+      <div><label class="lbl">Type</label><select id="co-type"><option value="">Select...</option><option>Building Owner</option><option>Hospital</option><option>Clinic</option><option>Staffing Agency</option><option>Pharma Company</option><option>Medical Device</option><option>Other</option></select></div>
+      <div><label class="lbl">Industry</label><select id="co-industry"><option value="">Select...</option><option>Healthcare Real Estate</option><option>Healthcare Staffing</option><option>Medical Device</option><option>Pharma</option><option>Other</option></select></div>
     </div>
-    <div class="modal-bd">
-      <div id="edit-shift-emp-info" style="margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid var(--border);font-size:14px;"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-        <div><label class="lbl">Clock in</label><input id="es-in" type="datetime-local"/></div>
-        <div><label class="lbl">Clock out <span style="font-size:10px;">(leave blank if still clocked in)</span></label><input id="es-out" type="datetime-local"/></div>
-      </div>
-      <div style="margin-bottom:12px;"><label class="lbl">Reason for edit *</label><textarea id="es-reason" placeholder="e.g. Employee forgot to clock out, correct time was 5:30 PM"></textarea></div>
-      <div class="err" id="es-err"></div>
-      <!-- Audit history for this shift -->
-      <div id="es-audit" style="margin-top:1rem;"></div>
+    <div style="margin-bottom:12px;"><label class="lbl">Address</label><input id="co-address" type="text"/></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;"><div><label class="lbl">City</label><input id="co-city" type="text"/></div><div><label class="lbl">State</label><input id="co-state" type="text"/></div><div><label class="lbl">ZIP</label><input id="co-zip" type="text"/></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;"><div><label class="lbl">Phone</label><input id="co-phone" type="tel"/></div><div><label class="lbl">Website</label><input id="co-website" type="text"/></div></div>
+    <div><label class="lbl">Notes</label><textarea id="co-notes"></textarea></div>
+    <div class="err" id="co-err" style="margin-top:8px;"></div>
+  </div>
+  <div class="modal-ft"><button class="btn btn-ghost-red btn-sm" id="co-delete-btn" style="margin-right:auto;display:none;" onclick="deleteCompany()"><i class="ti ti-trash"></i></button><button class="btn" onclick="closeModal('company-modal')">Cancel</button><button class="btn btn-gold" onclick="saveCompany()">Save</button></div>
+</div></div>
+
+<div class="overlay" id="deal-modal" style="display:none;"><div class="modal">
+  <div class="modal-hd"><h2 id="deal-modal-title"><i class="ti ti-trending-up" style="color:var(--gold);margin-right:6px;"></i>Deal</h2><button class="btn" style="padding:4px 10px;font-size:20px;border:none;" onclick="closeModal('deal-modal')">&times;</button></div>
+  <div class="modal-bd">
+    <div style="margin-bottom:12px;"><label class="lbl">Deal title *</label><input id="d-title" type="text" placeholder="e.g. 123 Main St Medical Office"/></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+      <div><label class="lbl">Stage</label><select id="d-stage" onchange="document.getElementById('d-lost-wrap').style.display=this.value==='Lost'?'block':'none'"><option>Lead</option><option>Contacted</option><option>Meeting Scheduled</option><option>Proposal</option><option>Won</option><option>Lost</option></select></div>
+      <div><label class="lbl">Value ($)</label><input id="d-value" type="number" placeholder="0"/></div>
     </div>
-    <div class="modal-ft">
-      <button class="btn btn-ghost-red btn-sm" onclick="deleteShift()" style="margin-right:auto;"><i class="ti ti-trash"></i> Delete shift</button>
-      <button class="btn" onclick="closeModal('edit-shift-modal')">Cancel</button>
-      <button class="btn btn-gold" onclick="saveShiftEdit()"><i class="ti ti-check"></i> Save changes</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;"><div><label class="lbl">Contact</label><select id="d-contact"><option value="">Select...</option></select></div><div><label class="lbl">Company</label><select id="d-company"><option value="">Select...</option></select></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;"><div><label class="lbl">Close date</label><input id="d-close" type="date"/></div><div><label class="lbl">Probability %</label><input id="d-prob" type="number" min="0" max="100" placeholder="50"/></div></div>
+    <div style="margin-bottom:12px;"><label class="lbl">Description</label><textarea id="d-desc"></textarea></div>
+    <div id="d-lost-wrap" style="display:none;margin-bottom:12px;"><label class="lbl">Lost reason</label><input id="d-lost" type="text"/></div>
+    <div class="err" id="d-err"></div>
+  </div>
+  <div class="modal-ft"><button class="btn btn-ghost-red btn-sm" id="d-delete-btn" style="margin-right:auto;display:none;" onclick="deleteDeal()"><i class="ti ti-trash"></i></button><button class="btn" onclick="closeModal('deal-modal')">Cancel</button><button class="btn btn-gold" onclick="saveDeal()">Save</button></div>
+</div></div>
+
+<div class="overlay" id="meeting-modal" style="display:none;"><div class="modal">
+  <div class="modal-hd"><h2><i class="ti ti-calendar-event" style="color:var(--gold);margin-right:6px;"></i>Meeting</h2><button class="btn" style="padding:4px 10px;font-size:20px;border:none;" onclick="closeModal('meeting-modal')">&times;</button></div>
+  <div class="modal-bd">
+    <div style="margin-bottom:12px;"><label class="lbl">Title *</label><input id="mt-title" type="text"/></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;"><div><label class="lbl">Date & time *</label><input id="mt-date" type="datetime-local"/></div><div><label class="lbl">Duration (mins)</label><input id="mt-duration" type="number" value="60"/></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;"><div><label class="lbl">Contact</label><select id="mt-contact"><option value="">Select...</option></select></div><div><label class="lbl">Company</label><select id="mt-company"><option value="">Select...</option></select></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;"><div><label class="lbl">Type</label><select id="mt-type"><option value="in_person">In person</option><option value="phone">Phone call</option><option value="video">Video call</option></select></div><div><label class="lbl">Deal</label><select id="mt-deal"><option value="">Select...</option></select></div></div>
+    <div style="margin-bottom:12px;"><label class="lbl">Location / Link</label><input id="mt-location" type="text"/></div>
+    <div style="margin-bottom:12px;"><label class="lbl">Notes / Agenda</label><textarea id="mt-notes"></textarea></div>
+    <div><label class="lbl">Outcome</label><textarea id="mt-outcome" placeholder="What happened?"></textarea></div>
+    <div class="err" id="mt-err" style="margin-top:8px;"></div>
+  </div>
+  <div class="modal-ft">
+    <button class="btn btn-sm" id="mt-cal-btn" style="margin-right:auto;display:none;" onclick="addToCalendar()"><i class="ti ti-calendar-plus"></i> Add to calendar</button>
+    <button class="btn btn-ghost-red btn-sm" id="mt-delete-btn" style="display:none;" onclick="deleteMeeting()"><i class="ti ti-trash"></i></button>
+    <button class="btn" onclick="closeModal('meeting-modal')">Cancel</button>
+    <button class="btn btn-gold" onclick="saveMeeting()">Save</button>
+  </div>
+</div></div>
+
+<div class="overlay" id="task-modal" style="display:none;"><div class="modal">
+  <div class="modal-hd"><h2><i class="ti ti-checkbox" style="color:var(--gold);margin-right:6px;"></i>Task</h2><button class="btn" style="padding:4px 10px;font-size:20px;border:none;" onclick="closeModal('task-modal')">&times;</button></div>
+  <div class="modal-bd">
+    <div style="margin-bottom:12px;"><label class="lbl">Title *</label><input id="tk-title" type="text" placeholder="e.g. Follow up with Dr. Smith"/></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;"><div><label class="lbl">Due date</label><input id="tk-due" type="datetime-local"/></div><div><label class="lbl">Priority</label><select id="tk-priority"><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;"><div><label class="lbl">Contact</label><select id="tk-contact"><option value="">Select...</option></select></div><div><label class="lbl">Deal</label><select id="tk-deal"><option value="">Select...</option></select></div></div>
+    <div><label class="lbl">Notes</label><textarea id="tk-notes"></textarea></div>
+    <div class="err" id="tk-err" style="margin-top:8px;"></div>
+  </div>
+  <div class="modal-ft"><button class="btn btn-ghost-red btn-sm" id="tk-delete-btn" style="margin-right:auto;display:none;" onclick="deleteTask()"><i class="ti ti-trash"></i></button><button class="btn" onclick="closeModal('task-modal')">Cancel</button><button class="btn btn-gold" onclick="saveTask()">Save</button></div>
+</div></div>
+
+<div class="overlay" id="note-modal" style="display:none;"><div class="modal">
+  <div class="modal-hd"><h2><i class="ti ti-pencil" style="color:var(--gold);margin-right:6px;"></i>Log activity</h2><button class="btn" style="padding:4px 10px;font-size:20px;border:none;" onclick="closeModal('note-modal')">&times;</button></div>
+  <div class="modal-bd">
+    <div style="margin-bottom:12px;"><label class="lbl">Type</label><select id="n-type"><option value="note">Note</option><option value="call">Phone call</option><option value="email">Email</option><option value="meeting">Meeting</option></select></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;"><div><label class="lbl">Contact</label><select id="n-contact"><option value="">Select...</option></select></div><div><label class="lbl">Deal</label><select id="n-deal"><option value="">Select...</option></select></div></div>
+    <div><label class="lbl">Description *</label><textarea id="n-desc" placeholder="What happened?"></textarea></div>
+    <div class="err" id="n-err" style="margin-top:8px;"></div>
+  </div>
+  <div class="modal-ft"><button class="btn" onclick="closeModal('note-modal')">Cancel</button><button class="btn btn-gold" onclick="saveActivity()">Log it</button></div>
+</div></div>
+
+<div class="overlay" id="edit-shift-modal" style="display:none;"><div class="modal">
+  <div class="modal-hd"><h2><i class="ti ti-edit" style="color:var(--gold);margin-right:6px;"></i>Edit shift</h2><button class="btn" style="padding:4px 10px;font-size:20px;border:none;" onclick="closeModal('edit-shift-modal')">&times;</button></div>
+  <div class="modal-bd">
+    <div id="edit-shift-emp-info" style="margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid var(--border);font-size:14px;"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;"><div><label class="lbl">Clock in</label><input id="es-in" type="datetime-local"/></div><div><label class="lbl">Clock out</label><input id="es-out" type="datetime-local"/></div></div>
+    <div style="margin-bottom:12px;"><label class="lbl">Reason *</label><textarea id="es-reason"></textarea></div>
+    <div class="err" id="es-err"></div>
+    <div id="es-audit"></div>
+  </div>
+  <div class="modal-ft"><button class="btn btn-ghost-red btn-sm" onclick="deleteShift()" style="margin-right:auto;"><i class="ti ti-trash"></i></button><button class="btn" onclick="closeModal('edit-shift-modal')">Cancel</button><button class="btn btn-gold" onclick="saveShiftEdit()">Save</button></div>
+</div></div>
+
+<div class="overlay" id="create-modal" style="display:none;"><div class="modal">
+  <div class="modal-hd"><h2><i class="ti ti-user-plus" style="color:var(--gold);margin-right:6px;"></i>Create user</h2><button class="btn" style="padding:4px 10px;font-size:20px;border:none;" onclick="closeModal('create-modal')">&times;</button></div>
+  <div class="modal-bd">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;"><div><label class="lbl">First name *</label><input id="m-fname" type="text"/></div><div><label class="lbl">Last name *</label><input id="m-lname" type="text"/></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;"><div><label class="lbl">Employee ID *</label><input id="m-eid" type="text"/></div><div><label class="lbl">RunPayroll #</label><input id="m-rp" type="text"/></div></div>
+    <div style="margin-bottom:12px;"><label class="lbl">Password (blank = auto-generate)</label><div style="display:flex;gap:8px;"><input id="m-pw" type="text" style="flex:1;"/><button class="btn btn-sm" onclick="document.getElementById('m-pw').value=genPw()"><i class="ti ti-refresh"></i></button></div></div>
+    <div class="err" id="modal-err"></div>
+    <div class="confirm-card" id="confirm-card" style="display:none;">
+      <div style="font-size:13px;font-weight:500;color:var(--gold-dark);margin-bottom:10px;"><i class="ti ti-circle-check"></i> User created:</div>
+      <div class="cred-row"><span class="cred-label">Name</span><span class="cred-val" id="cc-name"></span></div>
+      <div class="cred-row"><span class="cred-label">Employee ID</span><span class="cred-val" id="cc-id"></span></div>
+      <div class="cred-row"><span class="cred-label">Password</span><span class="cred-val" id="cc-pw"></span></div>
+      <div class="cred-row"><span class="cred-label">RunPayroll #</span><span class="cred-val" id="cc-rp"></span></div>
+      <div style="margin-top:12px;display:flex;gap:8px;"><button class="btn btn-gold btn-sm" onclick="copyCredentials()"><i class="ti ti-copy"></i> Copy</button><button class="btn btn-sm" onclick="resetCreateForm()"><i class="ti ti-user-plus"></i> Add another</button></div>
     </div>
   </div>
-</div>
+  <div class="modal-ft" id="modal-footer"><button class="btn" onclick="closeModal('create-modal')">Cancel</button><button class="btn btn-gold" onclick="createUser()">Create user</button></div>
+</div></div>
 
-<!-- Create user modal -->
-<div class="overlay" style="display:none;" id="create-modal">
-  <div class="modal">
-    <div class="modal-hd">
-      <h2><i class="ti ti-user-plus" style="color:var(--gold);margin-right:6px;"></i> Create new user</h2>
-      <button class="btn" style="padding:4px 10px;font-size:20px;border:none;" onclick="closeModal('create-modal')">&times;</button>
-    </div>
-    <div class="modal-bd">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-        <div><label class="lbl">First name *</label><input id="m-fname" type="text" placeholder="Jane"/></div>
-        <div><label class="lbl">Last name *</label><input id="m-lname" type="text" placeholder="Smith"/></div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-        <div><label class="lbl">Employee ID * <span style="font-size:10px;">(login ID)</span></label><input id="m-eid" type="text" placeholder="004"/></div>
-        <div><label class="lbl">RunPayroll # <span style="font-size:10px;">(from RunPayroll)</span></label><input id="m-rp" type="text" placeholder="11"/></div>
-      </div>
-      <div style="margin-bottom:12px;">
-        <label class="lbl">Password <span style="font-size:10px;">(blank = auto-generate)</span></label>
-        <div style="display:flex;gap:8px;"><input id="m-pw" type="text" placeholder="Leave blank to auto-generate" style="flex:1;"/><button class="btn btn-sm" onclick="document.getElementById('m-pw').value=genPw()"><i class="ti ti-refresh"></i></button></div>
-      </div>
-      <div class="err" id="modal-err"></div>
-      <div class="confirm-card hidden" id="confirm-card">
-        <div style="font-size:13px;font-weight:500;color:var(--gold-dark);margin-bottom:10px;"><i class="ti ti-circle-check"></i> User created — share these credentials:</div>
-        <div class="cred-row"><span class="cred-label">Name</span><span class="cred-val" id="cc-name"></span></div>
-        <div class="cred-row"><span class="cred-label">Employee ID</span><span class="cred-val" id="cc-id"></span></div>
-        <div class="cred-row"><span class="cred-label">Password</span><span class="cred-val" id="cc-pw"></span></div>
-        <div class="cred-row"><span class="cred-label">RunPayroll #</span><span class="cred-val" id="cc-rp"></span></div>
-        <div style="margin-top:12px;display:flex;gap:8px;">
-          <button class="btn btn-gold btn-sm" onclick="copyCredentials()"><i class="ti ti-copy"></i> Copy credentials</button>
-          <button class="btn btn-sm" onclick="resetCreateForm()"><i class="ti ti-user-plus"></i> Add another</button>
-        </div>
-      </div>
-    </div>
-    <div class="modal-ft" id="modal-footer">
-      <button class="btn" onclick="closeModal('create-modal')">Cancel</button>
-      <button class="btn btn-gold" onclick="createUser()"><i class="ti ti-check"></i> Create user</button>
-    </div>
+<div class="overlay" id="edit-user-modal" style="display:none;"><div class="modal">
+  <div class="modal-hd"><h2><i class="ti ti-edit" style="color:var(--gold);margin-right:6px;"></i>Edit user</h2><button class="btn" style="padding:4px 10px;font-size:20px;border:none;" onclick="closeModal('edit-user-modal')">&times;</button></div>
+  <div class="modal-bd">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;"><div><label class="lbl">First name</label><input id="eu-fname" type="text"/></div><div><label class="lbl">Last name</label><input id="eu-lname" type="text"/></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;"><div><label class="lbl">Employee ID</label><input id="eu-eid" type="text"/></div><div><label class="lbl">RunPayroll #</label><input id="eu-rp" type="text"/></div></div>
+    <div><label class="lbl">New password (blank = keep current)</label><div style="display:flex;gap:8px;"><input id="eu-pw" type="text" style="flex:1;"/><button class="btn btn-sm" onclick="document.getElementById('eu-pw').value=genPw()"><i class="ti ti-refresh"></i></button></div></div>
+    <div class="err" id="eu-err" style="margin-top:8px;"></div>
   </div>
-</div>
+  <div class="modal-ft"><button class="btn btn-ghost-red btn-sm" onclick="deactivateUser()" style="margin-right:auto;"><i class="ti ti-user-off"></i> Deactivate</button><button class="btn" onclick="closeModal('edit-user-modal')">Cancel</button><button class="btn btn-gold" onclick="saveEditUser()">Save</button></div>
+</div></div>
 
-<!-- Edit user modal -->
-<div class="overlay" style="display:none;" id="edit-user-modal">
-  <div class="modal">
-    <div class="modal-hd">
-      <h2><i class="ti ti-edit" style="color:var(--gold);margin-right:6px;"></i> Edit user</h2>
-      <button class="btn" style="padding:4px 10px;font-size:20px;border:none;" onclick="closeModal('edit-user-modal')">&times;</button>
-    </div>
-    <div class="modal-bd">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-        <div><label class="lbl">First name</label><input id="eu-fname" type="text"/></div>
-        <div><label class="lbl">Last name</label><input id="eu-lname" type="text"/></div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-        <div><label class="lbl">Employee ID</label><input id="eu-eid" type="text"/></div>
-        <div><label class="lbl">RunPayroll #</label><input id="eu-rp" type="text"/></div>
-      </div>
-      <div><label class="lbl">New password <span style="font-size:10px;">(blank = keep current)</span></label>
-        <div style="display:flex;gap:8px;"><input id="eu-pw" type="text" placeholder="Leave blank to keep current" style="flex:1;"/><button class="btn btn-sm" onclick="document.getElementById('eu-pw').value=genPw()"><i class="ti ti-refresh"></i></button></div>
-      </div>
-      <div class="err" id="eu-err" style="margin-top:8px;"></div>
-    </div>
-    <div class="modal-ft">
-      <button class="btn btn-ghost-red btn-sm" onclick="deactivateUser()" style="margin-right:auto;"><i class="ti ti-user-off"></i> Deactivate</button>
-      <button class="btn" onclick="closeModal('edit-user-modal')">Cancel</button>
-      <button class="btn btn-gold" onclick="saveEditUser()"><i class="ti ti-check"></i> Save</button>
-    </div>
-  </div>
-</div>
-
-<!-- ============ SCRIPT ============ -->
 <script>
 // ─── CONFIG ─────────────────────────────────────────────
 const SUPABASE_URL = 'https://ikomivpgffvvisryyjyh.supabase.co';
@@ -810,9 +976,8 @@ async function generateExport(){
   a.href=URL.createObjectURL(new Blob([content],{type:'text/csv'}));
   a.download=`Biweekly-${fmt(s)}-${fmt(e)}.csv`;a.click();
 }
-</script>
-</body>
-</html>async function saveContact(){
+
+async function saveContact(){
   const fn=document.getElementById('c-fname').value.trim(),ln=document.getElementById('c-lname').value.trim();
   if(!fn||!ln){document.getElementById('c-err').textContent='Name required.';return;}
   const payload={owner_id:currentUser.employee_id,first_name:fn,last_name:ln,title:document.getElementById('c-title').value.trim(),phone:document.getElementById('c-phone').value.trim(),email:document.getElementById('c-email').value.trim(),address:document.getElementById('c-address').value.trim(),notes:document.getElementById('c-notes').value.trim(),industry:document.getElementById('c-industry').value,lead_source:document.getElementById('c-source').value,company_id:document.getElementById('c-company').value||null,updated_at:new Date().toISOString()};
@@ -1044,6 +1209,8 @@ async function generateExport(){
   const fmt=d=>`${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}${d.getFullYear()}`;
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:'text/csv'}));a.download=`Biweekly-${fmt(s)}-${fmt(e)}.csv`;a.click();
 }
+
 </script>
+
 </body>
 </html>
