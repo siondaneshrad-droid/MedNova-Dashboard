@@ -587,6 +587,28 @@ function periodLabel(offset=0){
 
 function show(id){const el=document.getElementById(id);if(el)el.style.display='';}
 function hide(id){const el=document.getElementById(id);if(el)el.style.display='none';}
+function mainTab(t){
+  ['timeclock','crm'].forEach(n=>{const el=document.getElementById('emp-section-'+n);if(el)el.style.display=n===t?'':'none';});
+  document.querySelectorAll('#screen-employee .main-tab').forEach((b,i)=>b.classList.toggle('active',['timeclock','crm'][i]===t));
+  if(t==='crm'){loadCrmDropdowns();crmTab('dashboard');}
+}
+function empClockTab(t){
+  ['clock','timesheet'].forEach(n=>{const el=document.getElementById('etab-'+n);if(el)el.style.display=n===t?'':'none';});
+  document.querySelectorAll('#emp-section-timeclock .tab').forEach((b,i)=>b.classList.toggle('active',['clock','timesheet'][i]===t));
+  if(t==='timesheet')renderEmpTimesheetPeriod();
+}
+const CRM_TABS=['dashboard','contacts','companies','deals','meetings','tasks','activity'];
+function crmTab(t){
+  CRM_TABS.forEach(n=>{const el=document.getElementById('crm-'+n);if(el)el.style.display=n===t?'':'none';});
+  document.querySelectorAll('#emp-section-crm .tab').forEach((b,i)=>b.classList.toggle('active',CRM_TABS[i]===t));
+  if(t==='dashboard')loadCrmDashboard();
+  else if(t==='contacts')loadContacts();
+  else if(t==='companies')loadCompanies();
+  else if(t==='deals')loadDeals();
+  else if(t==='meetings')loadMeetings();
+  else if(t==='tasks')loadTasks();
+  else if(t==='activity')loadActivity();
+}
 function closeModal(id){hide(id);}
 
 // ─── AUTH ────────────────────────────────────────────────
@@ -614,7 +636,7 @@ function logout(){
 // ─── EMPLOYEE ────────────────────────────────────────────
 async function initEmployee(){
   hide('screen-login');show('screen-employee');
-  document.getElementById('emp-nav-name').textContent=currentUser.first_name+' '+currentUser.last_name+' · '+currentUser.employee_id;
+  document.getElementById('emp-nav-sub').textContent=currentUser.first_name+' '+currentUser.last_name;
   empPeriodOffset=0;
   await refreshEmpClockStatus();
   startClock();
