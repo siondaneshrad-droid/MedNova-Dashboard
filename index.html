@@ -198,6 +198,7 @@ code{font-family:'Courier New',monospace;background:#F5F3EE;padding:1px 5px;bord
         <button class="tab" onclick="crmTab('meetings')"><i class="ti ti-calendar-event"></i> Meetings</button>
         <button class="tab" onclick="crmTab('tasks')"><i class="ti ti-checkbox"></i> Tasks</button>
         <button class="tab" onclick="crmTab('activity')"><i class="ti ti-activity"></i> Activity</button>
+        <button class="tab" onclick="crmTab('team')"><i class="ti ti-topology-star"></i> Team</button>
       </div>
       <div id="crm-dashboard">
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:1.5rem;">
@@ -260,6 +261,19 @@ code{font-family:'Courier New',monospace;background:#F5F3EE;padding:1px 5px;bord
           <button class="btn btn-gold btn-sm" onclick="openModal('note-modal')"><i class="ti ti-plus"></i> Log</button>
         </div>
         <div id="activity-list"><div class="spinner"></div></div>
+      </div>
+      <div id="crm-team" style="display:none;">
+        <div style="margin-bottom:1rem;">
+          <div style="font-size:15px;font-weight:500;">Team shared records</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:4px;">Records your teammates have chosen to share with the team.</div>
+        </div>
+        <div class="tab-bar" style="margin-bottom:1rem;">
+          <button class="tab active" id="team-tab-contacts" onclick="teamSubTab('contacts')"><i class="ti ti-users"></i> Contacts</button>
+          <button class="tab" id="team-tab-companies" onclick="teamSubTab('companies')"><i class="ti ti-building"></i> Companies</button>
+          <button class="tab" id="team-tab-deals" onclick="teamSubTab('deals')"><i class="ti ti-trending-up"></i> Deals</button>
+          <button class="tab" id="team-tab-meetings" onclick="teamSubTab('meetings')"><i class="ti ti-calendar-event"></i> Meetings</button>
+        </div>
+        <div id="team-content"><div class="spinner"></div></div>
       </div>
     </div>
   </div>
@@ -407,6 +421,11 @@ code{font-family:'Courier New',monospace;background:#F5F3EE;padding:1px 5px;bord
     </div>
     <div style="margin-bottom:12px;"><label class="lbl">Address</label><input id="c-address" type="text"/></div>
     <div><label class="lbl">Notes</label><textarea id="c-notes"></textarea></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:12px;padding:10px 12px;background:var(--blue-bg);border-radius:var(--rs);">
+      <i class="ti ti-users" style="color:var(--blue-text);"></i>
+      <div style="flex:1;"><div style="font-size:13px;color:var(--blue-text);font-weight:500;">Share with team</div><div style="font-size:11px;color:var(--muted);">Teammates can view this contact</div></div>
+      <label style="position:relative;display:inline-block;width:40px;height:22px;cursor:pointer;"><input type="checkbox" id="c-shared" style="opacity:0;width:0;height:0;position:absolute;"/><span id="c-shared-track" style="position:absolute;inset:0;background:var(--border);border-radius:11px;transition:.2s;" onclick="toggleShared('c-shared','c-shared-track')"></span></label>
+    </div>
     <div class="err" id="c-err" style="margin-top:8px;"></div>
   </div>
   <div class="modal-ft"><button class="btn btn-ghost-red btn-sm" id="c-delete-btn" style="margin-right:auto;display:none;" onclick="deleteContact()"><i class="ti ti-trash"></i></button><button class="btn" onclick="closeModal('contact-modal')">Cancel</button><button class="btn btn-gold" onclick="saveContact()">Save</button></div>
@@ -424,6 +443,11 @@ code{font-family:'Courier New',monospace;background:#F5F3EE;padding:1px 5px;bord
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;"><div><label class="lbl">City</label><input id="co-city" type="text"/></div><div><label class="lbl">State</label><input id="co-state" type="text"/></div><div><label class="lbl">ZIP</label><input id="co-zip" type="text"/></div></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;"><div><label class="lbl">Phone</label><input id="co-phone" type="tel"/></div><div><label class="lbl">Website</label><input id="co-website" type="text"/></div></div>
     <div><label class="lbl">Notes</label><textarea id="co-notes"></textarea></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:12px;padding:10px 12px;background:var(--blue-bg);border-radius:var(--rs);">
+      <i class="ti ti-users" style="color:var(--blue-text);"></i>
+      <div style="flex:1;"><div style="font-size:13px;color:var(--blue-text);font-weight:500;">Share with team</div><div style="font-size:11px;color:var(--muted);">Teammates can view this company</div></div>
+      <label style="position:relative;display:inline-block;width:40px;height:22px;cursor:pointer;"><input type="checkbox" id="co-shared" style="opacity:0;width:0;height:0;position:absolute;"/><span id="co-shared-track" style="position:absolute;inset:0;background:var(--border);border-radius:11px;transition:.2s;" onclick="toggleShared('co-shared','co-shared-track')"></span></label>
+    </div>
     <div class="err" id="co-err" style="margin-top:8px;"></div>
   </div>
   <div class="modal-ft"><button class="btn btn-ghost-red btn-sm" id="co-delete-btn" style="margin-right:auto;display:none;" onclick="deleteCompany()"><i class="ti ti-trash"></i></button><button class="btn" onclick="closeModal('company-modal')">Cancel</button><button class="btn btn-gold" onclick="saveCompany()">Save</button></div>
@@ -441,6 +465,11 @@ code{font-family:'Courier New',monospace;background:#F5F3EE;padding:1px 5px;bord
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;"><div><label class="lbl">Close date</label><input id="d-close" type="date"/></div><div><label class="lbl">Probability %</label><input id="d-prob" type="number" min="0" max="100" placeholder="50"/></div></div>
     <div style="margin-bottom:12px;"><label class="lbl">Description</label><textarea id="d-desc"></textarea></div>
     <div id="d-lost-wrap" style="display:none;margin-bottom:12px;"><label class="lbl">Lost reason</label><input id="d-lost" type="text"/></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--blue-bg);border-radius:var(--rs);">
+      <i class="ti ti-users" style="color:var(--blue-text);"></i>
+      <div style="flex:1;"><div style="font-size:13px;color:var(--blue-text);font-weight:500;">Share with team</div><div style="font-size:11px;color:var(--muted);">Teammates can view this deal</div></div>
+      <label style="position:relative;display:inline-block;width:40px;height:22px;cursor:pointer;"><input type="checkbox" id="d-shared" style="opacity:0;width:0;height:0;position:absolute;"/><span id="d-shared-track" style="position:absolute;inset:0;background:var(--border);border-radius:11px;transition:.2s;" onclick="toggleShared('d-shared','d-shared-track')"></span></label>
+    </div>
     <div class="err" id="d-err"></div>
   </div>
   <div class="modal-ft"><button class="btn btn-ghost-red btn-sm" id="d-delete-btn" style="margin-right:auto;display:none;" onclick="deleteDeal()"><i class="ti ti-trash"></i></button><button class="btn" onclick="closeModal('deal-modal')">Cancel</button><button class="btn btn-gold" onclick="saveDeal()">Save</button></div>
@@ -456,6 +485,11 @@ code{font-family:'Courier New',monospace;background:#F5F3EE;padding:1px 5px;bord
     <div style="margin-bottom:12px;"><label class="lbl">Location / Link</label><input id="mt-location" type="text"/></div>
     <div style="margin-bottom:12px;"><label class="lbl">Notes / Agenda</label><textarea id="mt-notes"></textarea></div>
     <div><label class="lbl">Outcome</label><textarea id="mt-outcome" placeholder="What happened?"></textarea></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:12px;padding:10px 12px;background:var(--blue-bg);border-radius:var(--rs);">
+      <i class="ti ti-users" style="color:var(--blue-text);"></i>
+      <div style="flex:1;"><div style="font-size:13px;color:var(--blue-text);font-weight:500;">Share with team</div><div style="font-size:11px;color:var(--muted);">Teammates can view this meeting</div></div>
+      <label style="position:relative;display:inline-block;width:40px;height:22px;cursor:pointer;"><input type="checkbox" id="mt-shared" style="opacity:0;width:0;height:0;position:absolute;"/><span id="mt-shared-track" style="position:absolute;inset:0;background:var(--border);border-radius:11px;transition:.2s;" onclick="toggleShared('mt-shared','mt-shared-track')"></span></label>
+    </div>
     <div class="err" id="mt-err" style="margin-top:8px;"></div>
   </div>
   <div class="modal-ft">
@@ -604,10 +638,10 @@ function empClockTab(t){
   document.querySelectorAll('#emp-section-timeclock .tab').forEach((b,i)=>b.classList.toggle('active',['clock','timesheet'][i]===t));
   if(t==='timesheet')renderEmpTimesheetPeriod();
 }
-const CRM_TABS=['dashboard','contacts','companies','deals','meetings','tasks','activity'];
+const CRM_TABS=['dashboard','contacts','companies','deals','meetings','tasks','activity','team'];
 function crmTab(t){
   CRM_TABS.forEach(n=>{const el=document.getElementById('crm-'+n);if(el)el.style.display=n===t?'':'none';});
-  document.querySelectorAll('#emp-section-crm .tab').forEach((b,i)=>b.classList.toggle('active',CRM_TABS[i]===t));
+  document.querySelectorAll('#emp-section-crm .tab-bar .tab').forEach((b,i)=>b.classList.toggle('active',CRM_TABS[i]===t));
   if(t==='dashboard')loadCrmDashboard();
   else if(t==='contacts')loadContacts();
   else if(t==='companies')loadCompanies();
@@ -615,6 +649,52 @@ function crmTab(t){
   else if(t==='meetings')loadMeetings();
   else if(t==='tasks')loadTasks();
   else if(t==='activity')loadActivity();
+  else if(t==='team')loadTeamTab('contacts');
+}
+function toggleShared(checkId,trackId){
+  const cb=document.getElementById(checkId);
+  cb.checked=!cb.checked;
+  updateToggleUI(checkId,trackId,cb.checked);
+}
+function updateToggleUI(checkId,trackId,val){
+  const track=document.getElementById(trackId);
+  if(!track)return;
+  track.style.background=val?'var(--blue-text)':'var(--border)';
+  track.innerHTML=`<span style="position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:2px;left:2px;transition:.2s;${val?'transform:translateX(18px);':''}"></span>`;
+}
+function setSharedToggle(checkId,trackId,value){
+  const cb=document.getElementById(checkId);
+  if(cb)cb.checked=!!value;
+  updateToggleUI(checkId,trackId,!!value);
+}
+let teamSubTabActive='contacts';
+function teamSubTab(t){
+  teamSubTabActive=t;
+  ['contacts','companies','deals','meetings'].forEach(n=>{const el=document.getElementById('team-tab-'+n);if(el)el.classList.toggle('active',n===t);});
+  loadTeamTab(t);
+}
+async function loadTeamTab(type){
+  const el=document.getElementById('team-content');
+  if(!el)return;
+  el.innerHTML='<div class="spinner"></div>';
+  const eid=currentUser.employee_id;
+  if(type==='contacts'){
+    const{data}=await sb.from('contacts').select('*,companies(name),employees(first_name,last_name)').eq('shared',true).neq('owner_id',eid).order('last_name');
+    if(!data||!data.length){el.innerHTML='<div class="empty-state"><i class="ti ti-users"></i>No shared contacts yet.</div>';return;}
+    el.innerHTML=data.map(c=>`<div class="contact-card"><div class="avatar" style="${avatarStyle(Math.abs(c.first_name.charCodeAt(0)-65)%6)}">${(c.first_name[0]+c.last_name[0]).toUpperCase()}</div><div style="flex:1;"><div style="font-size:14px;font-weight:500;">${c.first_name} ${c.last_name}</div><div style="font-size:12px;color:var(--muted);">${c.title||''}${c.companies?' · '+c.companies.name:''}</div>${c.phone?`<div style="font-size:12px;color:var(--muted);"><a href="tel:${c.phone}">${c.phone}</a></div>`:''}</div><div style="text-align:right;font-size:11px;color:var(--muted);"><span class="badge" style="background:var(--blue-bg);color:var(--blue-text);font-size:10px;"><i class="ti ti-users" style="font-size:9px;"></i> Shared</span><div style="margin-top:4px;">${c.employees?c.employees.first_name+' '+c.employees.last_name:''}</div></div></div>`).join('');
+  } else if(type==='companies'){
+    const{data}=await sb.from('companies').select('*,employees(first_name,last_name)').eq('shared',true).neq('owner_id',eid).order('name');
+    if(!data||!data.length){el.innerHTML='<div class="empty-state"><i class="ti ti-building"></i>No shared companies yet.</div>';return;}
+    el.innerHTML=data.map(c=>`<div class="contact-card"><div class="avatar" style="background:var(--gold-light);color:var(--gold-dark);font-size:18px;width:40px;height:40px;"><i class="ti ti-building"></i></div><div style="flex:1;"><div style="font-size:14px;font-weight:500;">${c.name}</div><div style="font-size:12px;color:var(--muted);">${[c.type,c.city,c.state].filter(Boolean).join(' · ')}</div></div><div style="text-align:right;font-size:11px;color:var(--muted);"><span class="badge" style="background:var(--blue-bg);color:var(--blue-text);font-size:10px;"><i class="ti ti-users" style="font-size:9px;"></i> Shared</span><div style="margin-top:4px;">${c.employees?c.employees.first_name+' '+c.employees.last_name:''}</div></div></div>`).join('');
+  } else if(type==='deals'){
+    const{data}=await sb.from('deals').select('*,contacts(first_name,last_name),employees(first_name,last_name)').eq('shared',true).neq('owner_id',eid).order('created_at',{ascending:false});
+    if(!data||!data.length){el.innerHTML='<div class="empty-state"><i class="ti ti-trending-up"></i>No shared deals yet.</div>';return;}
+    el.innerHTML=data.map(d=>`<div class="contact-card"><div style="flex:1;"><div style="font-size:14px;font-weight:500;">${d.title}</div><div style="font-size:12px;color:var(--muted);">${d.value?fmtMoney(d.value)+' · ':''}${d.contacts?d.contacts.first_name+' '+d.contacts.last_name:''}</div></div><div style="text-align:right;">${stageBadge(d.stage)}<div style="margin-top:4px;font-size:11px;color:var(--muted);"><span class="badge" style="background:var(--blue-bg);color:var(--blue-text);font-size:10px;"><i class="ti ti-users" style="font-size:9px;"></i> Shared</span></div><div style="font-size:11px;color:var(--muted);">${d.employees?d.employees.first_name+' '+d.employees.last_name:''}</div></div></div>`).join('');
+  } else if(type==='meetings'){
+    const{data}=await sb.from('meetings').select('*,contacts(first_name,last_name),employees(first_name,last_name)').eq('shared',true).neq('owner_id',eid).order('meeting_date',{ascending:false});
+    if(!data||!data.length){el.innerHTML='<div class="empty-state"><i class="ti ti-calendar-event"></i>No shared meetings yet.</div>';return;}
+    el.innerHTML=data.map(m=>`<div class="contact-card"><div style="width:44px;text-align:center;flex-shrink:0;"><div style="font-size:18px;font-weight:500;color:var(--gold-dark);">${new Date(m.meeting_date).getDate()}</div><div style="font-size:10px;color:var(--muted);">${new Date(m.meeting_date).toLocaleDateString([],{month:'short'})}</div></div><div style="flex:1;"><div style="font-size:14px;font-weight:500;">${m.title}</div><div style="font-size:12px;color:var(--muted);">${fmtTime(m.meeting_date)}${m.contacts?' · '+m.contacts.first_name+' '+m.contacts.last_name:''}</div></div><div style="text-align:right;font-size:11px;color:var(--muted);"><span class="badge" style="background:var(--blue-bg);color:var(--blue-text);font-size:10px;"><i class="ti ti-users" style="font-size:9px;"></i> Shared</span><div style="margin-top:4px;">${m.employees?m.employees.first_name+' '+m.employees.last_name:''}</div></div></div>`).join('');
+  }
 }
 function openModal(id){const el=document.getElementById(id);if(el)el.style.display='flex';}
 function closeModal(id){const el=document.getElementById(id);if(el)el.style.display='none';}
@@ -1081,8 +1161,8 @@ function renderContacts(contacts){
   if(!contacts.length){el.innerHTML='<div class="empty-state"><i class="ti ti-users"></i>No contacts yet. Click Add to create one.</div>';return;}
   el.innerHTML=contacts.map(c=>`<div class="contact-card" onclick="openEditContact('${c.id}')"><div class="avatar" style="${avatarStyle(Math.abs(c.first_name.charCodeAt(0)-65)%6)}">${(c.first_name[0]+c.last_name[0]).toUpperCase()}</div><div style="flex:1;"><div style="font-size:14px;font-weight:500;">${c.first_name} ${c.last_name}</div><div style="font-size:12px;color:var(--muted);">${c.title||''}${c.title&&c.companies?' · ':''} ${c.companies?.name||''}</div>${c.phone?`<div style="font-size:12px;color:var(--muted);"><a href="tel:${c.phone}" onclick="event.stopPropagation()">${c.phone}</a></div>`:''}</div>${c.industry?`<span class="badge" style="background:var(--blue-bg);color:var(--blue-text);align-self:flex-start;font-size:10px;">${c.industry}</span>`:''}</div>`).join('');
 }
-function resetContactForm(){editingContactId=null;['c-fname','c-lname','c-title','c-phone','c-email','c-address','c-notes'].forEach(id=>document.getElementById(id).value='');document.getElementById('c-industry').value='';document.getElementById('c-source').value='';document.getElementById('c-company').value='';document.getElementById('c-err').textContent='';document.getElementById('contact-modal-title').innerHTML='<i class="ti ti-user" style="color:var(--gold);margin-right:6px;"></i>Add contact';document.getElementById('c-delete-btn').style.display='none';}
-async function openEditContact(id){const{data}=await sb.from('contacts').select('*').eq('id',id).single();if(!data)return;editingContactId=id;document.getElementById('contact-modal-title').innerHTML='<i class="ti ti-user" style="color:var(--gold);margin-right:6px;"></i>Edit contact';document.getElementById('c-fname').value=data.first_name;document.getElementById('c-lname').value=data.last_name;document.getElementById('c-title').value=data.title||'';document.getElementById('c-phone').value=data.phone||'';document.getElementById('c-email').value=data.email||'';document.getElementById('c-address').value=data.address||'';document.getElementById('c-notes').value=data.notes||'';document.getElementById('c-industry').value=data.industry||'';document.getElementById('c-source').value=data.lead_source||'';document.getElementById('c-company').value=data.company_id||'';document.getElementById('c-delete-btn').style.display='inline-flex';openModal('contact-modal');}
+function resetContactForm(){editingContactId=null;['c-fname','c-lname','c-title','c-phone','c-email','c-address','c-notes'].forEach(id=>document.getElementById(id).value='');document.getElementById('c-industry').value='';document.getElementById('c-source').value='';document.getElementById('c-company').value='';document.getElementById('c-err').textContent='';document.getElementById('contact-modal-title').innerHTML='<i class="ti ti-user" style="color:var(--gold);margin-right:6px;"></i>Add contact';document.getElementById('c-delete-btn').style.display='none';setSharedToggle('c-shared','c-shared-track',false);}
+async function openEditContact(id){const{data}=await sb.from('contacts').select('*').eq('id',id).single();if(!data)return;editingContactId=id;document.getElementById('contact-modal-title').innerHTML='<i class="ti ti-user" style="color:var(--gold);margin-right:6px;"></i>Edit contact';document.getElementById('c-fname').value=data.first_name;document.getElementById('c-lname').value=data.last_name;document.getElementById('c-title').value=data.title||'';document.getElementById('c-phone').value=data.phone||'';document.getElementById('c-email').value=data.email||'';document.getElementById('c-address').value=data.address||'';document.getElementById('c-notes').value=data.notes||'';document.getElementById('c-industry').value=data.industry||'';document.getElementById('c-source').value=data.lead_source||'';document.getElementById('c-company').value=data.company_id||'';document.getElementById('c-delete-btn').style.display='inline-flex';setSharedToggle('c-shared','c-shared-track',data.shared||false);openModal('contact-modal');}
 async function loadCompanies(){const{data}=await sb.from('companies').select('*').eq('owner_id',currentUser.employee_id).order('name');allCompanies=data||[];renderCompanies(data||[]);}
 function filterCompanies(){const q=document.getElementById('company-search').value.toLowerCase();renderCompanies(allCompanies.filter(c=>(c.name+' '+(c.city||'')+' '+(c.type||'')).toLowerCase().includes(q)));}
 function renderCompanies(companies){
@@ -1090,8 +1170,8 @@ function renderCompanies(companies){
   if(!companies.length){el.innerHTML='<div class="empty-state"><i class="ti ti-building"></i>No companies yet. Click Add to create one.</div>';return;}
   el.innerHTML=companies.map(c=>`<div class="contact-card" onclick="openEditCompany('${c.id}')"><div class="avatar" style="background:var(--gold-light);color:var(--gold-dark);font-size:18px;width:40px;height:40px;"><i class="ti ti-building"></i></div><div style="flex:1;"><div style="font-size:14px;font-weight:500;">${c.name}</div><div style="font-size:12px;color:var(--muted);">${[c.type,c.city,c.state].filter(Boolean).join(' · ')}</div>${c.phone?`<div style="font-size:12px;color:var(--muted);"><a href="tel:${c.phone}" onclick="event.stopPropagation()">${c.phone}</a></div>`:''}</div>${c.industry?`<span class="badge" style="background:var(--blue-bg);color:var(--blue-text);align-self:flex-start;font-size:10px;">${c.industry}</span>`:''}</div>`).join('');
 }
-function resetCompanyForm(){editingCompanyId=null;['co-name','co-address','co-city','co-state','co-zip','co-phone','co-website','co-notes'].forEach(id=>document.getElementById(id).value='');document.getElementById('co-type').value='';document.getElementById('co-industry').value='';document.getElementById('co-err').textContent='';document.getElementById('co-delete-btn').style.display='none';}
-async function openEditCompany(id){const{data}=await sb.from('companies').select('*').eq('id',id).single();if(!data)return;editingCompanyId=id;document.getElementById('co-name').value=data.name;document.getElementById('co-type').value=data.type||'';document.getElementById('co-industry').value=data.industry||'';document.getElementById('co-address').value=data.address||'';document.getElementById('co-city').value=data.city||'';document.getElementById('co-state').value=data.state||'';document.getElementById('co-zip').value=data.zip||'';document.getElementById('co-phone').value=data.phone||'';document.getElementById('co-website').value=data.website||'';document.getElementById('co-notes').value=data.notes||'';document.getElementById('co-delete-btn').style.display='inline-flex';openModal('company-modal');}
+function resetCompanyForm(){editingCompanyId=null;['co-name','co-address','co-city','co-state','co-zip','co-phone','co-website','co-notes'].forEach(id=>document.getElementById(id).value='');document.getElementById('co-type').value='';document.getElementById('co-industry').value='';document.getElementById('co-err').textContent='';document.getElementById('co-delete-btn').style.display='none';setSharedToggle('co-shared','co-shared-track',false);}
+async function openEditCompany(id){const{data}=await sb.from('companies').select('*').eq('id',id).single();if(!data)return;editingCompanyId=id;document.getElementById('co-name').value=data.name;document.getElementById('co-type').value=data.type||'';document.getElementById('co-industry').value=data.industry||'';document.getElementById('co-address').value=data.address||'';document.getElementById('co-city').value=data.city||'';document.getElementById('co-state').value=data.state||'';document.getElementById('co-zip').value=data.zip||'';document.getElementById('co-phone').value=data.phone||'';document.getElementById('co-website').value=data.website||'';document.getElementById('co-notes').value=data.notes||'';document.getElementById('co-delete-btn').style.display='inline-flex';setSharedToggle('co-shared','co-shared-track',data.shared||false);openModal('company-modal');}
 async function loadDeals(){const{data}=await sb.from('deals').select('*,contacts(first_name,last_name),companies(name)').eq('owner_id',currentUser.employee_id).order('created_at',{ascending:false});allDeals=data||[];renderDeals(data||[]);}
 function renderDeals(deals){
   const el=document.getElementById('deals-pipeline');
@@ -1120,7 +1200,11 @@ function renderTasks(tasks){
 function resetTaskForm(){editingTaskId=null;['tk-title','tk-due','tk-notes'].forEach(id=>document.getElementById(id).value='');document.getElementById('tk-priority').value='medium';document.getElementById('tk-contact').value='';document.getElementById('tk-deal').value='';document.getElementById('tk-err').textContent='';document.getElementById('tk-delete-btn').style.display='none';}
 async function openEditTask(id){const{data}=await sb.from('tasks').select('*').eq('id',id).single();if(!data)return;editingTaskId=id;document.getElementById('tk-title').value=data.title;document.getElementById('tk-due').value=data.due_date?toDatetimeLocal(data.due_date):'';document.getElementById('tk-priority').value=data.priority||'medium';document.getElementById('tk-contact').value=data.contact_id||'';document.getElementById('tk-deal').value=data.deal_id||'';document.getElementById('tk-notes').value=data.notes||'';document.getElementById('tk-delete-btn').style.display='inline-flex';openModal('task-modal');}
 async function loadActivity(){const{data}=await sb.from('activities').select('*,contacts(first_name,last_name),deals(title)').eq('owner_id',currentUser.employee_id).order('created_at',{ascending:false}).limit(50);renderActivityList(data||[],document.getElementById('activity-list'));}
-function renderActivityList(activities,el){if(!activities.length){el.innerHTML='<div class="empty-state"><i class="ti ti-activity"></i>No activity yet.</div>';return;}el.innerHTML=activities.map(a=>`<div class="activity-item">${activityIcon(a.type)}<div style="flex:1;"><div style="font-size:13px;">${a.description}</div><div style="font-size:11px;color:var(--muted);">${fmtDateTime(a.created_at)}${a.contacts?' · '+a.contacts.first_name+' '+a.contacts.last_name:''}${a.deals?' · '+a.deals.title:''}</div></div></div>`).join('');}
+function renderActivityList(activities,el){
+  if(!el)return;
+  if(!activities||!activities.length){el.innerHTML='<div class="empty-state"><i class="ti ti-activity"></i>No activity yet.</div>';return;}
+  el.innerHTML=activities.map(a=>`<div class="activity-item">${activityIcon(a.type)}<div style="flex:1;"><div style="font-size:13px;">${a.description}</div><div style="font-size:11px;color:var(--muted);">${fmtDateTime(a.created_at)}</div></div></div>`).join('');
+}
 async function saveActivity(){const desc=document.getElementById('n-desc').value.trim();if(!desc){document.getElementById('n-err').textContent='Required.';return;}await sb.from('activities').insert({owner_id:currentUser.employee_id,type:document.getElementById('n-type').value,contact_id:document.getElementById('n-contact').value||null,deal_id:document.getElementById('n-deal').value||null,description:desc});closeModal('note-modal');document.getElementById('n-desc').value='';loadActivity();}
 function addToCalendar(){
   if(!currentCalMeeting)return;
@@ -1139,7 +1223,7 @@ async function deleteTask(){if(!confirm('Delete?'))return;await sb.from('tasks')
 async function saveMeeting(){
   const title=document.getElementById('mt-title').value.trim(),date=document.getElementById('mt-date').value;
   if(!title||!date){document.getElementById('mt-err').textContent='Title and date required.';return;}
-  const payload={owner_id:currentUser.employee_id,title,meeting_date:fromDatetimeLocal(date),duration_mins:parseInt(document.getElementById('mt-duration').value)||60,contact_id:document.getElementById('mt-contact').value||null,company_id:document.getElementById('mt-company').value||null,deal_id:document.getElementById('mt-deal').value||null,meeting_type:document.getElementById('mt-type').value,location:document.getElementById('mt-location').value.trim(),notes:document.getElementById('mt-notes').value.trim(),outcome:document.getElementById('mt-outcome').value.trim()};
+  const payload={owner_id:currentUser.employee_id,title,meeting_date:fromDatetimeLocal(date),duration_mins:parseInt(document.getElementById('mt-duration').value)||60,contact_id:document.getElementById('mt-contact').value||null,company_id:document.getElementById('mt-company').value||null,deal_id:document.getElementById('mt-deal').value||null,meeting_type:document.getElementById('mt-type').value,location:document.getElementById('mt-location').value.trim(),notes:document.getElementById('mt-notes').value.trim(),outcome:document.getElementById('mt-outcome').value.trim(),shared:document.getElementById('mt-shared')?.checked||false};
   let error;
   if(editingMeetingId){({error}=await sb.from('meetings').update(payload).eq('id',editingMeetingId));}
   else{const{data,error:e}=await sb.from('meetings').insert(payload).select().single();error=e;if(!error){currentCalMeeting=data;await sb.from('activities').insert({owner_id:currentUser.employee_id,type:'meeting',contact_id:payload.contact_id,description:`Scheduled: ${title} on ${fmtDateTime(payload.meeting_date)}`});}}
@@ -1152,7 +1236,7 @@ async function saveDeal(){
   const title=document.getElementById('d-title').value.trim();if(!title){document.getElementById('d-err').textContent='Title required.';return;}
   const newStage=document.getElementById('d-stage').value;
   let oldStage=null;if(editingDealId){const{data}=await sb.from('deals').select('stage').eq('id',editingDealId).single();oldStage=data?.stage;}
-  const payload={owner_id:currentUser.employee_id,title,stage:newStage,value:parseFloat(document.getElementById('d-value').value)||null,contact_id:document.getElementById('d-contact').value||null,company_id:document.getElementById('d-company').value||null,close_date:document.getElementById('d-close').value||null,probability:parseInt(document.getElementById('d-prob').value)||0,description:document.getElementById('d-desc').value.trim(),lost_reason:document.getElementById('d-lost').value.trim(),updated_at:new Date().toISOString()};
+  const payload={owner_id:currentUser.employee_id,title,stage:newStage,value:parseFloat(document.getElementById('d-value').value)||null,contact_id:document.getElementById('d-contact').value||null,company_id:document.getElementById('d-company').value||null,close_date:document.getElementById('d-close').value||null,probability:parseInt(document.getElementById('d-prob').value)||0,description:document.getElementById('d-desc').value.trim(),lost_reason:document.getElementById('d-lost').value.trim(),shared:document.getElementById('d-shared')?.checked||false,updated_at:new Date().toISOString()};
   let error;
   if(editingDealId){({error}=await sb.from('deals').update(payload).eq('id',editingDealId));if(!error&&oldStage!==newStage)await sb.from('activities').insert({owner_id:currentUser.employee_id,type:'stage_change',deal_id:editingDealId,description:`Deal "${title}" moved: ${oldStage} → ${newStage}`});}
   else{({error}=await sb.from('deals').insert(payload));if(!error)await sb.from('activities').insert({owner_id:currentUser.employee_id,type:'created',description:`Created deal: ${title}`});}
@@ -1160,7 +1244,7 @@ async function saveDeal(){
   closeModal('deal-modal');loadDeals();loadCrmDropdowns();
 }
 async function deleteDeal(){if(!confirm('Delete?'))return;await sb.from('deals').delete().eq('id',editingDealId);closeModal('deal-modal');loadDeals();}
-async function saveCompany(){const name=document.getElementById('co-name').value.trim();if(!name){document.getElementById('co-err').textContent='Name required.';return;}const payload={owner_id:currentUser.employee_id,name,type:document.getElementById('co-type').value,industry:document.getElementById('co-industry').value,address:document.getElementById('co-address').value.trim(),city:document.getElementById('co-city').value.trim(),state:document.getElementById('co-state').value.trim(),zip:document.getElementById('co-zip').value.trim(),phone:document.getElementById('co-phone').value.trim(),website:document.getElementById('co-website').value.trim(),notes:document.getElementById('co-notes').value.trim(),updated_at:new Date().toISOString()};let error;if(editingCompanyId){({error}=await sb.from('companies').update(payload).eq('id',editingCompanyId));}else{({error}=await sb.from('companies').insert(payload));if(!error)await sb.from('activities').insert({owner_id:currentUser.employee_id,type:'created',description:`Added company: ${name}`});}if(error){document.getElementById('co-err').textContent='Error: '+error.message;return;}closeModal('company-modal');loadCompanies();loadCrmDropdowns();}
+async function saveCompany(){const name=document.getElementById('co-name').value.trim();if(!name){document.getElementById('co-err').textContent='Name required.';return;}const payload={owner_id:currentUser.employee_id,name,type:document.getElementById('co-type').value,industry:document.getElementById('co-industry').value,address:document.getElementById('co-address').value.trim(),city:document.getElementById('co-city').value.trim(),state:document.getElementById('co-state').value.trim(),zip:document.getElementById('co-zip').value.trim(),phone:document.getElementById('co-phone').value.trim(),website:document.getElementById('co-website').value.trim(),notes:document.getElementById('co-notes').value.trim(),shared:document.getElementById('co-shared')?.checked||false,updated_at:new Date().toISOString()};let error;if(editingCompanyId){({error}=await sb.from('companies').update(payload).eq('id',editingCompanyId));}else{({error}=await sb.from('companies').insert(payload));if(!error)await sb.from('activities').insert({owner_id:currentUser.employee_id,type:'created',description:`Added company: ${name}`});}if(error){document.getElementById('co-err').textContent='Error: '+error.message;return;}closeModal('company-modal');loadCompanies();loadCrmDropdowns();}
 async function deleteCompany(){if(!confirm('Delete?'))return;await sb.from('companies').delete().eq('id',editingCompanyId);closeModal('company-modal');loadCompanies();}
 async function loadAdminCrmOverview(){
   const empFilter=document.getElementById('adm-emp-filter').value;
@@ -1173,11 +1257,31 @@ async function loadAdminCrmOverview(){
   const pipeline=(deals||[]).filter(d=>!['Won','Lost'].includes(d.stage)).reduce((a,d)=>a+(parseFloat(d.value)||0),0);
   document.getElementById('adm-crm-value').textContent='$'+(pipeline/1000).toFixed(0)+'k';
   const stages=['Lead','Contacted','Meeting Scheduled','Proposal','Won','Lost'];
-  document.getElementById('adm-pipeline-breakdown').innerHTML=stages.map(s=>{const sd=(deals||[]).filter(d=>d.stage===s);const val=sd.reduce((a,d)=>a+(parseFloat(d.value)||0),0);return`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">${stageBadge(s)}<span style="flex:1;">${sd.length} deal${sd.length!==1?'s':''}</span><span style="color:var(--muted);">${val>0?fmtMoney(val):''}</span></div>`;}).join('');
+  document.getElementById('adm-pipeline-breakdown').innerHTML=stages.map(s=>{
+    const sd=(deals||[]).filter(d=>d.stage===s);
+    const val=sd.reduce((a,d)=>a+(parseFloat(d.value)||0),0);
+    return`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">${stageBadge(s)}<span style="flex:1;">${sd.length} deal${sd.length!==1?'s':''}</span><span style="color:var(--muted);">${val>0?fmtMoney(val):''}</span></div>`;
+  }).join('');
   const{data:emps}=await sb.from('employees').select('employee_id,first_name,last_name').eq('active',true).neq('role','admin');
-  if(!emps)return;
-  const rows=await Promise.all(emps.map(async e=>{const[{data:ec},{data:ed},{data:ea}]=await Promise.all([sb.from('contacts').select('id').eq('owner_id',e.employee_id),sb.from('deals').select('id').eq('owner_id',e.employee_id),sb.from('activities').select('id').eq('owner_id',e.employee_id)]);return`<div class="row"><div style="flex:1;font-size:14px;">${e.first_name} ${e.last_name}</div><span style="font-size:12px;color:var(--muted);">${(ec||[]).length} contacts · ${(ed||[]).length} deals · ${(ea||[]).length} activities</span></div>`;}));
-  document.getElementById('adm-emp-activity').innerHTML=rows.join('');
+  if(!emps||!emps.length){
+    document.getElementById('adm-emp-activity').innerHTML='<p style="font-size:13px;color:var(--muted);">No employees yet.</p>';
+    return;
+  }
+  // Populate employee filter dropdowns
+  const opts='<option value="">All employees</option>'+emps.map(e=>`<option value="${e.employee_id}">${e.first_name} ${e.last_name}</option>`).join('');
+  ['adm-emp-filter','adm-contact-emp-filter','adm-deal-emp-filter','adm-meeting-emp-filter','adm-activity-emp-filter'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){const cur=el.value;el.innerHTML=opts;el.value=cur;}
+  });
+  const rows=await Promise.all(emps.map(async e=>{
+    const[{data:ec},{data:ed},{data:ea}]=await Promise.all([
+      sb.from('contacts').select('id',{count:'exact'}).eq('owner_id',e.employee_id),
+      sb.from('deals').select('id',{count:'exact'}).eq('owner_id',e.employee_id),
+      sb.from('activities').select('id',{count:'exact'}).eq('owner_id',e.employee_id)
+    ]);
+    return`<div class="row"><div style="flex:1;font-size:14px;">${e.first_name} ${e.last_name}</div><span style="font-size:12px;color:var(--muted);">${ec?ec.length:0} contacts · ${ed?ed.length:0} deals · ${ea?ea.length:0} activities</span></div>`;
+  }));
+  document.getElementById('adm-emp-activity').innerHTML=rows.length?rows.join(''):'<p style="font-size:13px;color:var(--muted);">No activity yet.</p>';
 }
 async function loadAdminContacts(){
   const emp=document.getElementById('adm-contact-emp-filter').value,q=(document.getElementById('adm-contact-search')||{value:''}).value.toLowerCase();
@@ -1200,19 +1304,20 @@ async function loadAdminMeetings(){
 }
 async function loadAdminActivity(){
   const emp=document.getElementById('adm-activity-emp-filter').value;
-  let q=sb.from('activities').select('*,contacts(first_name,last_name),employees(first_name,last_name)').order('created_at',{ascending:false}).limit(100);if(emp)q=q.eq('owner_id',emp);
-  const{data}=await q;renderActivityList(data||[],document.getElementById('adm-activity-list'));
+  let q=sb.from('activities').select('*').order('created_at',{ascending:false}).limit(100);
+  if(emp)q=q.eq('owner_id',emp);
+  const{data}=await q;
+  const el=document.getElementById('adm-activity-list');
+  if(!data||!data.length){el.innerHTML='<div class="empty-state"><i class="ti ti-activity"></i>No activity yet.</div>';return;}
+  el.innerHTML=data.map(a=>`<div class="activity-item">${activityIcon(a.type)}<div style="flex:1;"><div style="font-size:13px;">${a.description}</div><div style="font-size:11px;color:var(--muted);">${fmtDateTime(a.created_at)} · ${a.owner_id}</div></div></div>`).join('');
 }
 async function initAdminCrm(){
-  const{data:emps}=await sb.from('employees').select('employee_id,first_name,last_name').eq('active',true).neq('role','admin').order('last_name');
-  const opts='<option value="">All employees</option>'+(emps||[]).map(e=>`<option value="${e.employee_id}">${e.first_name} ${e.last_name}</option>`).join('');
-  ['adm-emp-filter','adm-contact-emp-filter','adm-deal-emp-filter','adm-meeting-emp-filter','adm-activity-emp-filter'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
-  loadAdminCrmOverview();
+  await loadAdminCrmOverview();
 }
 async function saveContact(){
   const fn=document.getElementById('c-fname').value.trim(),ln=document.getElementById('c-lname').value.trim();
   if(!fn||!ln){document.getElementById('c-err').textContent='Name required.';return;}
-  const payload={owner_id:currentUser.employee_id,first_name:fn,last_name:ln,title:document.getElementById('c-title').value.trim(),phone:document.getElementById('c-phone').value.trim(),email:document.getElementById('c-email').value.trim(),address:document.getElementById('c-address').value.trim(),notes:document.getElementById('c-notes').value.trim(),industry:document.getElementById('c-industry').value,lead_source:document.getElementById('c-source').value,company_id:document.getElementById('c-company').value||null,updated_at:new Date().toISOString()};
+  const payload={owner_id:currentUser.employee_id,first_name:fn,last_name:ln,title:document.getElementById('c-title').value.trim(),phone:document.getElementById('c-phone').value.trim(),email:document.getElementById('c-email').value.trim(),address:document.getElementById('c-address').value.trim(),notes:document.getElementById('c-notes').value.trim(),industry:document.getElementById('c-industry').value,lead_source:document.getElementById('c-source').value,company_id:document.getElementById('c-company').value||null,shared:document.getElementById('c-shared')?.checked||false,updated_at:new Date().toISOString()};
   let error;
   if(editingContactId){({error}=await sb.from('contacts').update(payload).eq('id',editingContactId));}
   else{({error}=await sb.from('contacts').insert(payload));if(!error)await sb.from('activities').insert({owner_id:currentUser.employee_id,type:'created',description:`Added contact: ${fn} ${ln}`});}
