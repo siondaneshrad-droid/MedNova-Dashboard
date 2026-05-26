@@ -554,6 +554,10 @@ const COLORS = ['#F0E6C8|#8B6B2A','#E1F5EE|#085041','#E6F1FB|#0C447C','#FBEAF0|#
 let currentUser = null, clockInterval = null, shiftStart = null;
 let empPeriodOffset = 0, adminPeriodOffset = 0;
 let editingShiftId = null, editingUserId = null;
+let editingContactId = null, editingCompanyId = null, editingDealId = null;
+let editingMeetingId = null, editingTaskId = null;
+let allContacts = [], allCompanies = [], allDeals = [];
+let taskFilter = 'open', currentCalMeeting = null;
 
 // ─── UTILS ───────────────────────────────────────────────
 function initials(e){return(e.first_name[0]+e.last_name[0]).toUpperCase();}
