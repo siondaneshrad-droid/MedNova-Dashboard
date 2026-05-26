@@ -999,6 +999,173 @@ async function generateExport(){
   a.download=`Biweekly-${fmt(s)}-${fmt(e)}.csv`;a.click();
 }
 
+async function loadCrmDropdowns(){
+  const eid=currentUser.employee_id;
+  const[{data:contacts},{data:companies},{data:deals}]=await Promise.all([sb.from('contacts').select('id,first_name,last_name').eq('owner_id',eid).order('last_name'),sb.from('companies').select('id,name').eq('owner_id',eid).order('name'),sb.from('deals').select('id,title').eq('owner_id',eid).order('title')]);
+  allContacts=contacts||[];allCompanies=companies||[];allDeals=deals||[];
+  const cOpts='<option value="">Select...</option>'+(contacts||[]).map(c=>`<option value="${c.id}">${c.first_name} ${c.last_name}</option>`).join('');
+  const coOpts='<option value="">Select...</option>'+(companies||[]).map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  const dOpts='<option value="">Select...</option>'+(deals||[]).map(d=>`<option value="${d.id}">${d.title}</option>`).join('');
+  document.getElementById('c-company').innerHTML=coOpts;
+  document.getElementById('d-contact').innerHTML=cOpts;document.getElementById('d-company').innerHTML=coOpts;
+  document.getElementById('mt-contact').innerHTML=cOpts;document.getElementById('mt-company').innerHTML=coOpts;document.getElementById('mt-deal').innerHTML=dOpts;
+  document.getElementById('tk-contact').innerHTML=cOpts;document.getElementById('tk-deal').innerHTML=dOpts;
+  document.getElementById('n-contact').innerHTML=cOpts;document.getElementById('n-deal').innerHTML=dOpts;
+}
+async function loadCrmDashboard(){
+  const eid=currentUser.employee_id;
+  const[{data:contacts},{data:companies},{data:deals},{data:meetings},{data:tasks},{data:activities}]=await Promise.all([
+    sb.from('contacts').select('id').eq('owner_id',eid),
+    sb.from('companies').select('id').eq('owner_id',eid),
+    sb.from('deals').select('id,value,stage').eq('owner_id',eid).not('stage','in','("Won","Lost")'),
+    sb.from('meetings').select('*,contacts(first_name,last_name)').eq('owner_id',eid).gte('meeting_date',new Date().toISOString()).order('meeting_date').limit(5),
+    sb.from('tasks').select('*,contacts(first_name,last_name)').eq('owner_id',eid).eq('status','open').order('due_date').limit(5),
+    sb.from('activities').select('*,contacts(first_name,last_name)').eq('owner_id',eid).order('created_at',{ascending:false}).limit(8)
+  ]);
+  document.getElementById('crm-stat-contacts').textContent=(contacts||[]).length;
+  document.getElementById('crm-stat-companies').textContent=(companies||[]).length;
+  document.getElementById('crm-stat-deals').textContent=(deals||[]).length;
+  const pv=(deals||[]).reduce((a,d)=>a+(parseFloat(d.value)||0),0);
+  document.getElementById('crm-stat-value').textContent=pv>0?'$'+(pv/1000).toFixed(0)+'k':'$0';
+  document.getElementById('crm-upcoming-meetings').innerHTML=meetings&&meetings.length?meetings.map(m=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-weight:500;">${m.title}</div><div style="color:var(--muted);font-size:12px;">${fmtDateTime(m.meeting_date)}${m.contacts?' · '+m.contacts.first_name+' '+m.contacts.last_name:''}</div></div>`).join(''):'<p style="font-size:13px;color:var(--muted);">No upcoming meetings.</p>';
+  document.getElementById('crm-open-tasks').innerHTML=tasks&&tasks.length?tasks.map(t=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;align-items:center;gap:8px;"><button class="btn btn-sm" style="padding:2px 6px;font-size:11px;" onclick="completeTask('${t.id}')"><i class="ti ti-check"></i></button><div><div>${t.title}</div><div style="color:var(--muted);font-size:11px;">${t.due_date?fmtDateShort(t.due_date)+' · ':''}${priorityBadge(t.priority)}</div></div></div>`).join(''):'<p style="font-size:13px;color:var(--muted);">No open tasks.</p>';
+  document.getElementById('crm-recent-activity').innerHTML=activities&&activities.length?activities.map(a=>`<div class="activity-item">${activityIcon(a.type)}<div><div style="font-size:13px;">${a.description}</div><div style="font-size:11px;color:var(--muted);">${fmtDateTime(a.created_at)}${a.contacts?' · '+a.contacts.first_name+' '+a.contacts.last_name:''}</div></div></div>`).join(''):'<p style="font-size:13px;color:var(--muted);">No activity yet.</p>';
+}
+async function loadContacts(){const{data}=await sb.from('contacts').select('*,companies(name)').eq('owner_id',currentUser.employee_id).order('last_name');allContacts=data||[];renderContacts(data||[]);}
+function filterContacts(){const q=document.getElementById('contact-search').value.toLowerCase();renderContacts(allContacts.filter(c=>(c.first_name+' '+c.last_name+' '+(c.title||'')+' '+(c.companies?.name||'')).toLowerCase().includes(q)));}
+function renderContacts(contacts){
+  const el=document.getElementById('contacts-list');
+  if(!contacts.length){el.innerHTML='<div class="empty-state"><i class="ti ti-users"></i>No contacts yet. Click Add to create one.</div>';return;}
+  el.innerHTML=contacts.map(c=>`<div class="contact-card" onclick="openEditContact('${c.id}')"><div class="avatar" style="${avatarStyle(Math.abs(c.first_name.charCodeAt(0)-65)%6)}">${(c.first_name[0]+c.last_name[0]).toUpperCase()}</div><div style="flex:1;"><div style="font-size:14px;font-weight:500;">${c.first_name} ${c.last_name}</div><div style="font-size:12px;color:var(--muted);">${c.title||''}${c.title&&c.companies?' · ':''} ${c.companies?.name||''}</div>${c.phone?`<div style="font-size:12px;color:var(--muted);"><a href="tel:${c.phone}" onclick="event.stopPropagation()">${c.phone}</a></div>`:''}</div>${c.industry?`<span class="badge" style="background:var(--blue-bg);color:var(--blue-text);align-self:flex-start;font-size:10px;">${c.industry}</span>`:''}</div>`).join('');
+}
+function resetContactForm(){editingContactId=null;['c-fname','c-lname','c-title','c-phone','c-email','c-address','c-notes'].forEach(id=>document.getElementById(id).value='');document.getElementById('c-industry').value='';document.getElementById('c-source').value='';document.getElementById('c-company').value='';document.getElementById('c-err').textContent='';document.getElementById('contact-modal-title').innerHTML='<i class="ti ti-user" style="color:var(--gold);margin-right:6px;"></i>Add contact';document.getElementById('c-delete-btn').style.display='none';}
+async function openEditContact(id){const{data}=await sb.from('contacts').select('*').eq('id',id).single();if(!data)return;editingContactId=id;document.getElementById('contact-modal-title').innerHTML='<i class="ti ti-user" style="color:var(--gold);margin-right:6px;"></i>Edit contact';document.getElementById('c-fname').value=data.first_name;document.getElementById('c-lname').value=data.last_name;document.getElementById('c-title').value=data.title||'';document.getElementById('c-phone').value=data.phone||'';document.getElementById('c-email').value=data.email||'';document.getElementById('c-address').value=data.address||'';document.getElementById('c-notes').value=data.notes||'';document.getElementById('c-industry').value=data.industry||'';document.getElementById('c-source').value=data.lead_source||'';document.getElementById('c-company').value=data.company_id||'';document.getElementById('c-delete-btn').style.display='inline-flex';openModal('contact-modal');}
+async function loadCompanies(){const{data}=await sb.from('companies').select('*').eq('owner_id',currentUser.employee_id).order('name');allCompanies=data||[];renderCompanies(data||[]);}
+function filterCompanies(){const q=document.getElementById('company-search').value.toLowerCase();renderCompanies(allCompanies.filter(c=>(c.name+' '+(c.city||'')+' '+(c.type||'')).toLowerCase().includes(q)));}
+function renderCompanies(companies){
+  const el=document.getElementById('companies-list');
+  if(!companies.length){el.innerHTML='<div class="empty-state"><i class="ti ti-building"></i>No companies yet. Click Add to create one.</div>';return;}
+  el.innerHTML=companies.map(c=>`<div class="contact-card" onclick="openEditCompany('${c.id}')"><div class="avatar" style="background:var(--gold-light);color:var(--gold-dark);font-size:18px;width:40px;height:40px;"><i class="ti ti-building"></i></div><div style="flex:1;"><div style="font-size:14px;font-weight:500;">${c.name}</div><div style="font-size:12px;color:var(--muted);">${[c.type,c.city,c.state].filter(Boolean).join(' · ')}</div>${c.phone?`<div style="font-size:12px;color:var(--muted);"><a href="tel:${c.phone}" onclick="event.stopPropagation()">${c.phone}</a></div>`:''}</div>${c.industry?`<span class="badge" style="background:var(--blue-bg);color:var(--blue-text);align-self:flex-start;font-size:10px;">${c.industry}</span>`:''}</div>`).join('');
+}
+function resetCompanyForm(){editingCompanyId=null;['co-name','co-address','co-city','co-state','co-zip','co-phone','co-website','co-notes'].forEach(id=>document.getElementById(id).value='');document.getElementById('co-type').value='';document.getElementById('co-industry').value='';document.getElementById('co-err').textContent='';document.getElementById('co-delete-btn').style.display='none';}
+async function openEditCompany(id){const{data}=await sb.from('companies').select('*').eq('id',id).single();if(!data)return;editingCompanyId=id;document.getElementById('co-name').value=data.name;document.getElementById('co-type').value=data.type||'';document.getElementById('co-industry').value=data.industry||'';document.getElementById('co-address').value=data.address||'';document.getElementById('co-city').value=data.city||'';document.getElementById('co-state').value=data.state||'';document.getElementById('co-zip').value=data.zip||'';document.getElementById('co-phone').value=data.phone||'';document.getElementById('co-website').value=data.website||'';document.getElementById('co-notes').value=data.notes||'';document.getElementById('co-delete-btn').style.display='inline-flex';openModal('company-modal');}
+async function loadDeals(){const{data}=await sb.from('deals').select('*,contacts(first_name,last_name),companies(name)').eq('owner_id',currentUser.employee_id).order('created_at',{ascending:false});allDeals=data||[];renderDeals(data||[]);}
+function renderDeals(deals){
+  const el=document.getElementById('deals-pipeline');
+  const stages=['Lead','Contacted','Meeting Scheduled','Proposal','Won','Lost'];
+  el.innerHTML='<div class="pipeline">'+stages.map(stage=>{const sd=deals.filter(d=>d.stage===stage);const total=sd.reduce((a,d)=>a+(parseFloat(d.value)||0),0);return`<div class="pipeline-col"><div class="pipeline-col-hd"><span>${stage}</span><span>${sd.length}</span></div>${total>0?`<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">${fmtMoney(total)}</div>`:''}`+sd.map(d=>`<div class="pipeline-card" onclick="openEditDeal('${d.id}')"><div class="pipeline-card-title">${d.title}</div><div class="pipeline-card-meta">${d.value?fmtMoney(d.value)+' ':''}${d.contacts?'· '+d.contacts.first_name+' '+d.contacts.last_name:''}</div>${d.close_date?`<div class="pipeline-card-meta">Close: ${fmtDateShort(d.close_date)}</div>`:''}</div>`).join('')+'</div>';}).join('')+'</div>';
+}
+function resetDealForm(){editingDealId=null;['d-title','d-value','d-prob','d-desc','d-lost'].forEach(id=>document.getElementById(id).value='');document.getElementById('d-stage').value='Lead';document.getElementById('d-contact').value='';document.getElementById('d-company').value='';document.getElementById('d-close').value='';document.getElementById('d-err').textContent='';document.getElementById('d-delete-btn').style.display='none';document.getElementById('d-lost-wrap').style.display='none';document.getElementById('deal-modal-title').innerHTML='<i class="ti ti-trending-up" style="color:var(--gold);margin-right:6px;"></i>Add deal';}
+async function openEditDeal(id){const{data}=await sb.from('deals').select('*').eq('id',id).single();if(!data)return;editingDealId=id;document.getElementById('deal-modal-title').innerHTML='<i class="ti ti-trending-up" style="color:var(--gold);margin-right:6px;"></i>Edit deal';document.getElementById('d-title').value=data.title;document.getElementById('d-stage').value=data.stage;document.getElementById('d-value').value=data.value||'';document.getElementById('d-contact').value=data.contact_id||'';document.getElementById('d-company').value=data.company_id||'';document.getElementById('d-close').value=data.close_date||'';document.getElementById('d-prob').value=data.probability||'';document.getElementById('d-desc').value=data.description||'';document.getElementById('d-lost').value=data.lost_reason||'';document.getElementById('d-lost-wrap').style.display=data.stage==='Lost'?'block':'none';document.getElementById('d-delete-btn').style.display='inline-flex';openModal('deal-modal');}
+async function loadMeetings(){const{data}=await sb.from('meetings').select('*,contacts(first_name,last_name),companies(name)').eq('owner_id',currentUser.employee_id).order('meeting_date',{ascending:false});renderMeetings(data||[]);}
+function renderMeetings(meetings){
+  const el=document.getElementById('meetings-list');
+  if(!meetings.length){el.innerHTML='<div class="empty-state"><i class="ti ti-calendar-event"></i>No meetings yet.</div>';return;}
+  const now=new Date();const upcoming=meetings.filter(m=>new Date(m.meeting_date)>=now);const past=meetings.filter(m=>new Date(m.meeting_date)<now);
+  const renderGroup=(title,items)=>items.length?`<div style="font-size:12px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:1rem 0 8px;">${title}</div>`+items.map(m=>`<div class="contact-card" onclick="openEditMeeting('${m.id}')"><div style="width:44px;text-align:center;flex-shrink:0;"><div style="font-size:18px;font-weight:500;color:var(--gold-dark);">${new Date(m.meeting_date).getDate()}</div><div style="font-size:10px;color:var(--muted);">${new Date(m.meeting_date).toLocaleDateString([],{month:'short'})}</div></div><div style="flex:1;"><div style="font-size:14px;font-weight:500;">${m.title}</div><div style="font-size:12px;color:var(--muted);">${fmtTime(m.meeting_date)} · ${(m.meeting_type||'').replace('_',' ')}${m.contacts?' · '+m.contacts.first_name+' '+m.contacts.last_name:''}</div>${m.location?`<div style="font-size:12px;color:var(--muted);">${m.location}</div>`:''}</div><button class="btn btn-sm" style="font-size:11px;" onclick="event.stopPropagation();addToCalendarById('${m.id}')"><i class="ti ti-calendar-plus"></i></button></div>`).join(''):'';
+  el.innerHTML=renderGroup('Upcoming',upcoming)+renderGroup('Past',past);
+}
+function resetMeetingForm(){editingMeetingId=null;currentCalMeeting=null;['mt-title','mt-date','mt-location','mt-notes','mt-outcome'].forEach(id=>document.getElementById(id).value='');document.getElementById('mt-duration').value='60';document.getElementById('mt-type').value='in_person';document.getElementById('mt-contact').value='';document.getElementById('mt-company').value='';document.getElementById('mt-deal').value='';document.getElementById('mt-err').textContent='';document.getElementById('mt-delete-btn').style.display='none';document.getElementById('mt-cal-btn').style.display='none';}
+async function openEditMeeting(id){const{data}=await sb.from('meetings').select('*').eq('id',id).single();if(!data)return;editingMeetingId=id;currentCalMeeting=data;document.getElementById('mt-title').value=data.title;document.getElementById('mt-date').value=toDatetimeLocal(data.meeting_date);document.getElementById('mt-duration').value=data.duration_mins||60;document.getElementById('mt-contact').value=data.contact_id||'';document.getElementById('mt-company').value=data.company_id||'';document.getElementById('mt-deal').value=data.deal_id||'';document.getElementById('mt-type').value=data.meeting_type||'in_person';document.getElementById('mt-location').value=data.location||'';document.getElementById('mt-notes').value=data.notes||'';document.getElementById('mt-outcome').value=data.outcome||'';document.getElementById('mt-delete-btn').style.display='inline-flex';document.getElementById('mt-cal-btn').style.display='inline-flex';openModal('meeting-modal');}
+async function loadTasks(){let q=sb.from('tasks').select('*,contacts(first_name,last_name)').eq('owner_id',currentUser.employee_id);if(taskFilter!=='all')q=q.eq('status',taskFilter);const{data}=await q.order('due_date');renderTasks(data||[]);}
+function setTaskFilter(f){taskFilter=f;['open','completed','all'].forEach(n=>{const el=document.getElementById('tf-'+n);if(el){el.style.background=n===f?'var(--gold-light)':'';el.style.borderColor=n===f?'var(--gold)':'var(--border)';}});loadTasks();}
+function renderTasks(tasks){
+  const el=document.getElementById('tasks-list');
+  if(!tasks.length){el.innerHTML='<div class="empty-state"><i class="ti ti-checkbox"></i>No tasks here.</div>';return;}
+  el.innerHTML=tasks.map(t=>`<div class="task-row"><button class="btn btn-sm" style="padding:4px 8px;" onclick="${t.status==='open'?`completeTask('${t.id}')`:`reopenTask('${t.id}')`}"><i class="ti ${t.status==='open'?'ti-circle':'ti-circle-check'}" style="color:${t.status==='open'?'var(--muted)':'var(--green-text)'};"></i></button><div style="flex:1;${t.status==='completed'?'opacity:.5;text-decoration:line-through;':''}"><div style="font-size:14px;">${t.title}</div><div style="font-size:12px;color:var(--muted);">${t.due_date?fmtDateTime(t.due_date)+' · ':''}${priorityBadge(t.priority)}${t.contacts?' · '+t.contacts.first_name+' '+t.contacts.last_name:''}</div></div><button class="btn btn-sm" onclick="openEditTask('${t.id}')"><i class="ti ti-edit"></i></button></div>`).join('');
+}
+function resetTaskForm(){editingTaskId=null;['tk-title','tk-due','tk-notes'].forEach(id=>document.getElementById(id).value='');document.getElementById('tk-priority').value='medium';document.getElementById('tk-contact').value='';document.getElementById('tk-deal').value='';document.getElementById('tk-err').textContent='';document.getElementById('tk-delete-btn').style.display='none';}
+async function openEditTask(id){const{data}=await sb.from('tasks').select('*').eq('id',id).single();if(!data)return;editingTaskId=id;document.getElementById('tk-title').value=data.title;document.getElementById('tk-due').value=data.due_date?toDatetimeLocal(data.due_date):'';document.getElementById('tk-priority').value=data.priority||'medium';document.getElementById('tk-contact').value=data.contact_id||'';document.getElementById('tk-deal').value=data.deal_id||'';document.getElementById('tk-notes').value=data.notes||'';document.getElementById('tk-delete-btn').style.display='inline-flex';openModal('task-modal');}
+async function loadActivity(){const{data}=await sb.from('activities').select('*,contacts(first_name,last_name),deals(title)').eq('owner_id',currentUser.employee_id).order('created_at',{ascending:false}).limit(50);renderActivityList(data||[],document.getElementById('activity-list'));}
+function renderActivityList(activities,el){if(!activities.length){el.innerHTML='<div class="empty-state"><i class="ti ti-activity"></i>No activity yet.</div>';return;}el.innerHTML=activities.map(a=>`<div class="activity-item">${activityIcon(a.type)}<div style="flex:1;"><div style="font-size:13px;">${a.description}</div><div style="font-size:11px;color:var(--muted);">${fmtDateTime(a.created_at)}${a.contacts?' · '+a.contacts.first_name+' '+a.contacts.last_name:''}${a.deals?' · '+a.deals.title:''}</div></div></div>`).join('');}
+async function saveActivity(){const desc=document.getElementById('n-desc').value.trim();if(!desc){document.getElementById('n-err').textContent='Required.';return;}await sb.from('activities').insert({owner_id:currentUser.employee_id,type:document.getElementById('n-type').value,contact_id:document.getElementById('n-contact').value||null,deal_id:document.getElementById('n-deal').value||null,description:desc});closeModal('note-modal');document.getElementById('n-desc').value='';loadActivity();}
+function addToCalendar(){
+  if(!currentCalMeeting)return;
+  const start=new Date(currentCalMeeting.meeting_date);
+  const end=new Date(start.getTime()+(currentCalMeeting.duration_mins||60)*60000);
+  const fmt=d=>d.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
+  // Try native calendar first (works on iOS), fall back to Google Calendar
+  const iosUrl=`webcal://calendar.google.com/calendar/ical/${encodeURIComponent(currentCalMeeting.title)}.ics`;
+  const googleUrl=`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(currentCalMeeting.title)}&dates=${fmt(start)}/${fmt(end)}&details=${encodeURIComponent(currentCalMeeting.notes||'')}&location=${encodeURIComponent(currentCalMeeting.location||'')}`;
+  window.open(googleUrl,'_blank');
+}
+async function addToCalendarById(id){const{data}=await sb.from('meetings').select('*').eq('id',id).single();if(!data)return;currentCalMeeting=data;addToCalendar();}
+async function completeTask(id){await sb.from('tasks').update({status:'completed',completed_at:new Date().toISOString()}).eq('id',id);loadTasks();if(document.getElementById('crm-dashboard').style.display!=='none')loadCrmDashboard();}
+async function reopenTask(id){await sb.from('tasks').update({status:'open',completed_at:null}).eq('id',id);loadTasks();}
+async function deleteTask(){if(!confirm('Delete?'))return;await sb.from('tasks').delete().eq('id',editingTaskId);closeModal('task-modal');loadTasks();}
+async function saveMeeting(){
+  const title=document.getElementById('mt-title').value.trim(),date=document.getElementById('mt-date').value;
+  if(!title||!date){document.getElementById('mt-err').textContent='Title and date required.';return;}
+  const payload={owner_id:currentUser.employee_id,title,meeting_date:fromDatetimeLocal(date),duration_mins:parseInt(document.getElementById('mt-duration').value)||60,contact_id:document.getElementById('mt-contact').value||null,company_id:document.getElementById('mt-company').value||null,deal_id:document.getElementById('mt-deal').value||null,meeting_type:document.getElementById('mt-type').value,location:document.getElementById('mt-location').value.trim(),notes:document.getElementById('mt-notes').value.trim(),outcome:document.getElementById('mt-outcome').value.trim()};
+  let error;
+  if(editingMeetingId){({error}=await sb.from('meetings').update(payload).eq('id',editingMeetingId));}
+  else{const{data,error:e}=await sb.from('meetings').insert(payload).select().single();error=e;if(!error){currentCalMeeting=data;await sb.from('activities').insert({owner_id:currentUser.employee_id,type:'meeting',contact_id:payload.contact_id,description:`Scheduled: ${title} on ${fmtDateTime(payload.meeting_date)}`});}}
+  if(error){document.getElementById('mt-err').textContent='Error: '+error.message;return;}
+  closeModal('meeting-modal');loadMeetings();
+}
+async function deleteMeeting(){if(!confirm('Delete?'))return;await sb.from('meetings').delete().eq('id',editingMeetingId);closeModal('meeting-modal');loadMeetings();}
+async function saveTask(){const title=document.getElementById('tk-title').value.trim();if(!title){document.getElementById('tk-err').textContent='Title required.';return;}const payload={owner_id:currentUser.employee_id,title,due_date:fromDatetimeLocal(document.getElementById('tk-due').value),priority:document.getElementById('tk-priority').value,contact_id:document.getElementById('tk-contact').value||null,deal_id:document.getElementById('tk-deal').value||null,notes:document.getElementById('tk-notes').value.trim()};let error;if(editingTaskId){({error}=await sb.from('tasks').update(payload).eq('id',editingTaskId));}else{({error}=await sb.from('tasks').insert(payload));}if(error){document.getElementById('tk-err').textContent='Error: '+error.message;return;}closeModal('task-modal');loadTasks();}
+async function saveDeal(){
+  const title=document.getElementById('d-title').value.trim();if(!title){document.getElementById('d-err').textContent='Title required.';return;}
+  const newStage=document.getElementById('d-stage').value;
+  let oldStage=null;if(editingDealId){const{data}=await sb.from('deals').select('stage').eq('id',editingDealId).single();oldStage=data?.stage;}
+  const payload={owner_id:currentUser.employee_id,title,stage:newStage,value:parseFloat(document.getElementById('d-value').value)||null,contact_id:document.getElementById('d-contact').value||null,company_id:document.getElementById('d-company').value||null,close_date:document.getElementById('d-close').value||null,probability:parseInt(document.getElementById('d-prob').value)||0,description:document.getElementById('d-desc').value.trim(),lost_reason:document.getElementById('d-lost').value.trim(),updated_at:new Date().toISOString()};
+  let error;
+  if(editingDealId){({error}=await sb.from('deals').update(payload).eq('id',editingDealId));if(!error&&oldStage!==newStage)await sb.from('activities').insert({owner_id:currentUser.employee_id,type:'stage_change',deal_id:editingDealId,description:`Deal "${title}" moved: ${oldStage} → ${newStage}`});}
+  else{({error}=await sb.from('deals').insert(payload));if(!error)await sb.from('activities').insert({owner_id:currentUser.employee_id,type:'created',description:`Created deal: ${title}`});}
+  if(error){document.getElementById('d-err').textContent='Error: '+error.message;return;}
+  closeModal('deal-modal');loadDeals();loadCrmDropdowns();
+}
+async function deleteDeal(){if(!confirm('Delete?'))return;await sb.from('deals').delete().eq('id',editingDealId);closeModal('deal-modal');loadDeals();}
+async function saveCompany(){const name=document.getElementById('co-name').value.trim();if(!name){document.getElementById('co-err').textContent='Name required.';return;}const payload={owner_id:currentUser.employee_id,name,type:document.getElementById('co-type').value,industry:document.getElementById('co-industry').value,address:document.getElementById('co-address').value.trim(),city:document.getElementById('co-city').value.trim(),state:document.getElementById('co-state').value.trim(),zip:document.getElementById('co-zip').value.trim(),phone:document.getElementById('co-phone').value.trim(),website:document.getElementById('co-website').value.trim(),notes:document.getElementById('co-notes').value.trim(),updated_at:new Date().toISOString()};let error;if(editingCompanyId){({error}=await sb.from('companies').update(payload).eq('id',editingCompanyId));}else{({error}=await sb.from('companies').insert(payload));if(!error)await sb.from('activities').insert({owner_id:currentUser.employee_id,type:'created',description:`Added company: ${name}`});}if(error){document.getElementById('co-err').textContent='Error: '+error.message;return;}closeModal('company-modal');loadCompanies();loadCrmDropdowns();}
+async function deleteCompany(){if(!confirm('Delete?'))return;await sb.from('companies').delete().eq('id',editingCompanyId);closeModal('company-modal');loadCompanies();}
+async function loadAdminCrmOverview(){
+  const empFilter=document.getElementById('adm-emp-filter').value;
+  let dQ=sb.from('deals').select('id,value,stage,owner_id');if(empFilter)dQ=dQ.eq('owner_id',empFilter);
+  let cQ=sb.from('contacts').select('id,owner_id');if(empFilter)cQ=cQ.eq('owner_id',empFilter);
+  const[{data:deals},{data:contacts}]=await Promise.all([dQ,cQ]);
+  document.getElementById('adm-crm-contacts').textContent=(contacts||[]).length;
+  document.getElementById('adm-crm-deals').textContent=(deals||[]).length;
+  document.getElementById('adm-crm-won').textContent=(deals||[]).filter(d=>d.stage==='Won').length;
+  const pipeline=(deals||[]).filter(d=>!['Won','Lost'].includes(d.stage)).reduce((a,d)=>a+(parseFloat(d.value)||0),0);
+  document.getElementById('adm-crm-value').textContent='$'+(pipeline/1000).toFixed(0)+'k';
+  const stages=['Lead','Contacted','Meeting Scheduled','Proposal','Won','Lost'];
+  document.getElementById('adm-pipeline-breakdown').innerHTML=stages.map(s=>{const sd=(deals||[]).filter(d=>d.stage===s);const val=sd.reduce((a,d)=>a+(parseFloat(d.value)||0),0);return`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">${stageBadge(s)}<span style="flex:1;">${sd.length} deal${sd.length!==1?'s':''}</span><span style="color:var(--muted);">${val>0?fmtMoney(val):''}</span></div>`;}).join('');
+  const{data:emps}=await sb.from('employees').select('employee_id,first_name,last_name').eq('active',true).neq('role','admin');
+  if(!emps)return;
+  const rows=await Promise.all(emps.map(async e=>{const[{data:ec},{data:ed},{data:ea}]=await Promise.all([sb.from('contacts').select('id').eq('owner_id',e.employee_id),sb.from('deals').select('id').eq('owner_id',e.employee_id),sb.from('activities').select('id').eq('owner_id',e.employee_id)]);return`<div class="row"><div style="flex:1;font-size:14px;">${e.first_name} ${e.last_name}</div><span style="font-size:12px;color:var(--muted);">${(ec||[]).length} contacts · ${(ed||[]).length} deals · ${(ea||[]).length} activities</span></div>`;}));
+  document.getElementById('adm-emp-activity').innerHTML=rows.join('');
+}
+async function loadAdminContacts(){
+  const emp=document.getElementById('adm-contact-emp-filter').value,q=(document.getElementById('adm-contact-search')||{value:''}).value.toLowerCase();
+  let query=sb.from('contacts').select('*,companies(name),employees(first_name,last_name)').order('last_name');if(emp)query=query.eq('owner_id',emp);
+  const{data}=await query;
+  const filtered=(data||[]).filter(c=>!q||(c.first_name+' '+c.last_name+' '+(c.companies?.name||'')).toLowerCase().includes(q));
+  document.getElementById('adm-contacts-list').innerHTML=filtered.length?filtered.map(c=>`<div class="contact-card"><div class="avatar" style="${avatarStyle(Math.abs(c.first_name.charCodeAt(0)-65)%6)}">${(c.first_name[0]+c.last_name[0]).toUpperCase()}</div><div style="flex:1;"><div style="font-size:14px;font-weight:500;">${c.first_name} ${c.last_name}</div><div style="font-size:12px;color:var(--muted);">${c.title||''}${c.companies?' · '+c.companies.name:''}</div>${c.phone?`<div style="font-size:12px;color:var(--muted);">${c.phone}</div>`:''}</div><div style="text-align:right;font-size:11px;color:var(--muted);">${c.employees?c.employees.first_name+' '+c.employees.last_name:c.owner_id}</div></div>`).join(''):'<div class="empty-state"><i class="ti ti-users"></i>No contacts.</div>';
+}
+async function loadAdminDeals(){
+  const emp=document.getElementById('adm-deal-emp-filter').value;
+  let q=sb.from('deals').select('*,contacts(first_name,last_name),employees(first_name,last_name)').order('created_at',{ascending:false});if(emp)q=q.eq('owner_id',emp);
+  const{data}=await q;
+  document.getElementById('adm-deals-list').innerHTML=data&&data.length?data.map(d=>`<div class="contact-card"><div style="flex:1;"><div style="font-size:14px;font-weight:500;">${d.title}</div><div style="font-size:12px;color:var(--muted);">${d.value?fmtMoney(d.value)+' · ':''}${d.contacts?d.contacts.first_name+' '+d.contacts.last_name:''}</div></div><div style="text-align:right;">${stageBadge(d.stage)}<div style="font-size:11px;color:var(--muted);margin-top:4px;">${d.employees?d.employees.first_name+' '+d.employees.last_name:d.owner_id}</div></div></div>`).join(''):'<div class="empty-state"><i class="ti ti-trending-up"></i>No deals.</div>';
+}
+async function loadAdminMeetings(){
+  const emp=document.getElementById('adm-meeting-emp-filter').value;
+  let q=sb.from('meetings').select('*,contacts(first_name,last_name),employees(first_name,last_name)').order('meeting_date',{ascending:false});if(emp)q=q.eq('owner_id',emp);
+  const{data}=await q;
+  document.getElementById('adm-meetings-list').innerHTML=data&&data.length?data.map(m=>`<div class="contact-card"><div style="width:44px;text-align:center;flex-shrink:0;"><div style="font-size:18px;font-weight:500;color:var(--gold-dark);">${new Date(m.meeting_date).getDate()}</div><div style="font-size:10px;color:var(--muted);">${new Date(m.meeting_date).toLocaleDateString([],{month:'short'})}</div></div><div style="flex:1;"><div style="font-size:14px;font-weight:500;">${m.title}</div><div style="font-size:12px;color:var(--muted);">${fmtTime(m.meeting_date)}${m.contacts?' · '+m.contacts.first_name+' '+m.contacts.last_name:''}</div></div><div style="font-size:11px;color:var(--muted);">${m.employees?m.employees.first_name+' '+m.employees.last_name:m.owner_id}</div></div>`).join(''):'<div class="empty-state"><i class="ti ti-calendar-event"></i>No meetings.</div>';
+}
+async function loadAdminActivity(){
+  const emp=document.getElementById('adm-activity-emp-filter').value;
+  let q=sb.from('activities').select('*,contacts(first_name,last_name),employees(first_name,last_name)').order('created_at',{ascending:false}).limit(100);if(emp)q=q.eq('owner_id',emp);
+  const{data}=await q;renderActivityList(data||[],document.getElementById('adm-activity-list'));
+}
+async function initAdminCrm(){
+  const{data:emps}=await sb.from('employees').select('employee_id,first_name,last_name').eq('active',true).neq('role','admin').order('last_name');
+  const opts='<option value="">All employees</option>'+(emps||[]).map(e=>`<option value="${e.employee_id}">${e.first_name} ${e.last_name}</option>`).join('');
+  ['adm-emp-filter','adm-contact-emp-filter','adm-deal-emp-filter','adm-meeting-emp-filter','adm-activity-emp-filter'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
+  loadAdminCrmOverview();
+}
 async function saveContact(){
   const fn=document.getElementById('c-fname').value.trim(),ln=document.getElementById('c-lname').value.trim();
   if(!fn||!ln){document.getElementById('c-err').textContent='Name required.';return;}
