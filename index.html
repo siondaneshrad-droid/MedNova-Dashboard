@@ -112,6 +112,16 @@ button{font-family:inherit;cursor:pointer;transition:all .15s;}
 .spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;}
 @keyframes spin{to{transform:rotate(360deg);}}
 code{font-family:'Courier New',monospace;background:#F5F3EE;padding:1px 5px;border-radius:3px;font-size:12px;}
+.toggle-wrap{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--blue-bg);border-radius:var(--rs);margin-top:12px;}
+.toggle-label{flex:1;}
+.toggle-label-title{font-size:13px;color:var(--blue-text);font-weight:500;}
+.toggle-label-sub{font-size:11px;color:var(--muted);}
+.toggle{position:relative;width:42px;height:24px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;position:absolute;}
+.toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:12px;cursor:pointer;transition:.2s;}
+.toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;}
+.toggle input:checked+.toggle-slider{background:var(--blue-text);}
+.toggle input:checked+.toggle-slider:before{transform:translateX(18px);}
 @media(max-width:600px){.pipeline{flex-direction:column;}.pipeline-col{min-width:unset;}}
 </style>
 </head>
@@ -421,10 +431,10 @@ code{font-family:'Courier New',monospace;background:#F5F3EE;padding:1px 5px;bord
     </div>
     <div style="margin-bottom:12px;"><label class="lbl">Address</label><input id="c-address" type="text"/></div>
     <div><label class="lbl">Notes</label><textarea id="c-notes"></textarea></div>
-    <div style="display:flex;align-items:center;gap:10px;margin-top:12px;padding:10px 12px;background:var(--blue-bg);border-radius:var(--rs);">
+    <div class="toggle-wrap">
       <i class="ti ti-users" style="color:var(--blue-text);"></i>
-      <div style="flex:1;"><div style="font-size:13px;color:var(--blue-text);font-weight:500;">Share with team</div><div style="font-size:11px;color:var(--muted);">Teammates can view this contact</div></div>
-      <label style="position:relative;display:inline-block;width:40px;height:22px;cursor:pointer;"><input type="checkbox" id="c-shared" style="opacity:0;width:0;height:0;position:absolute;"/><span id="c-shared-track" style="position:absolute;inset:0;background:var(--border);border-radius:11px;transition:.2s;" onclick="toggleShared('c-shared','c-shared-track')"></span></label>
+      <div class="toggle-label"><div class="toggle-label-title">Share with team</div><div class="toggle-label-sub">Teammates can view this contact</div></div>
+      <label class="toggle"><input type="checkbox" id="c-shared"/><span class="toggle-slider"></span></label>
     </div>
     <div class="err" id="c-err" style="margin-top:8px;"></div>
   </div>
@@ -443,10 +453,10 @@ code{font-family:'Courier New',monospace;background:#F5F3EE;padding:1px 5px;bord
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;"><div><label class="lbl">City</label><input id="co-city" type="text"/></div><div><label class="lbl">State</label><input id="co-state" type="text"/></div><div><label class="lbl">ZIP</label><input id="co-zip" type="text"/></div></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;"><div><label class="lbl">Phone</label><input id="co-phone" type="tel"/></div><div><label class="lbl">Website</label><input id="co-website" type="text"/></div></div>
     <div><label class="lbl">Notes</label><textarea id="co-notes"></textarea></div>
-    <div style="display:flex;align-items:center;gap:10px;margin-top:12px;padding:10px 12px;background:var(--blue-bg);border-radius:var(--rs);">
+    <div class="toggle-wrap">
       <i class="ti ti-users" style="color:var(--blue-text);"></i>
-      <div style="flex:1;"><div style="font-size:13px;color:var(--blue-text);font-weight:500;">Share with team</div><div style="font-size:11px;color:var(--muted);">Teammates can view this company</div></div>
-      <label style="position:relative;display:inline-block;width:40px;height:22px;cursor:pointer;"><input type="checkbox" id="co-shared" style="opacity:0;width:0;height:0;position:absolute;"/><span id="co-shared-track" style="position:absolute;inset:0;background:var(--border);border-radius:11px;transition:.2s;" onclick="toggleShared('co-shared','co-shared-track')"></span></label>
+      <div class="toggle-label"><div class="toggle-label-title">Share with team</div><div class="toggle-label-sub">Teammates can view this company</div></div>
+      <label class="toggle"><input type="checkbox" id="co-shared"/><span class="toggle-slider"></span></label>
     </div>
     <div class="err" id="co-err" style="margin-top:8px;"></div>
   </div>
@@ -465,10 +475,10 @@ code{font-family:'Courier New',monospace;background:#F5F3EE;padding:1px 5px;bord
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;"><div><label class="lbl">Close date</label><input id="d-close" type="date"/></div><div><label class="lbl">Probability %</label><input id="d-prob" type="number" min="0" max="100" placeholder="50"/></div></div>
     <div style="margin-bottom:12px;"><label class="lbl">Description</label><textarea id="d-desc"></textarea></div>
     <div id="d-lost-wrap" style="display:none;margin-bottom:12px;"><label class="lbl">Lost reason</label><input id="d-lost" type="text"/></div>
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--blue-bg);border-radius:var(--rs);">
+    <div class="toggle-wrap">
       <i class="ti ti-users" style="color:var(--blue-text);"></i>
-      <div style="flex:1;"><div style="font-size:13px;color:var(--blue-text);font-weight:500;">Share with team</div><div style="font-size:11px;color:var(--muted);">Teammates can view this deal</div></div>
-      <label style="position:relative;display:inline-block;width:40px;height:22px;cursor:pointer;"><input type="checkbox" id="d-shared" style="opacity:0;width:0;height:0;position:absolute;"/><span id="d-shared-track" style="position:absolute;inset:0;background:var(--border);border-radius:11px;transition:.2s;" onclick="toggleShared('d-shared','d-shared-track')"></span></label>
+      <div class="toggle-label"><div class="toggle-label-title">Share with team</div><div class="toggle-label-sub">Teammates can view this deal</div></div>
+      <label class="toggle"><input type="checkbox" id="d-shared"/><span class="toggle-slider"></span></label>
     </div>
     <div class="err" id="d-err"></div>
   </div>
@@ -485,10 +495,10 @@ code{font-family:'Courier New',monospace;background:#F5F3EE;padding:1px 5px;bord
     <div style="margin-bottom:12px;"><label class="lbl">Location / Link</label><input id="mt-location" type="text"/></div>
     <div style="margin-bottom:12px;"><label class="lbl">Notes / Agenda</label><textarea id="mt-notes"></textarea></div>
     <div><label class="lbl">Outcome</label><textarea id="mt-outcome" placeholder="What happened?"></textarea></div>
-    <div style="display:flex;align-items:center;gap:10px;margin-top:12px;padding:10px 12px;background:var(--blue-bg);border-radius:var(--rs);">
+    <div class="toggle-wrap">
       <i class="ti ti-users" style="color:var(--blue-text);"></i>
-      <div style="flex:1;"><div style="font-size:13px;color:var(--blue-text);font-weight:500;">Share with team</div><div style="font-size:11px;color:var(--muted);">Teammates can view this meeting</div></div>
-      <label style="position:relative;display:inline-block;width:40px;height:22px;cursor:pointer;"><input type="checkbox" id="mt-shared" style="opacity:0;width:0;height:0;position:absolute;"/><span id="mt-shared-track" style="position:absolute;inset:0;background:var(--border);border-radius:11px;transition:.2s;" onclick="toggleShared('mt-shared','mt-shared-track')"></span></label>
+      <div class="toggle-label"><div class="toggle-label-title">Share with team</div><div class="toggle-label-sub">Teammates can view this meeting</div></div>
+      <label class="toggle"><input type="checkbox" id="mt-shared"/><span class="toggle-slider"></span></label>
     </div>
     <div class="err" id="mt-err" style="margin-top:8px;"></div>
   </div>
@@ -651,21 +661,10 @@ function crmTab(t){
   else if(t==='activity')loadActivity();
   else if(t==='team')loadTeamTab('contacts');
 }
-function toggleShared(checkId,trackId){
-  const cb=document.getElementById(checkId);
-  cb.checked=!cb.checked;
-  updateToggleUI(checkId,trackId,cb.checked);
-}
-function updateToggleUI(checkId,trackId,val){
-  const track=document.getElementById(trackId);
-  if(!track)return;
-  track.style.background=val?'var(--blue-text)':'var(--border)';
-  track.innerHTML=`<span style="position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:2px;left:2px;transition:.2s;${val?'transform:translateX(18px);':''}"></span>`;
-}
+function toggleShared(checkId,trackId){} // legacy - no longer needed
 function setSharedToggle(checkId,trackId,value){
   const cb=document.getElementById(checkId);
   if(cb)cb.checked=!!value;
-  updateToggleUI(checkId,trackId,!!value);
 }
 let teamSubTabActive='contacts';
 function teamSubTab(t){
@@ -1141,18 +1140,18 @@ async function loadCrmDashboard(){
     sb.from('contacts').select('id').eq('owner_id',eid),
     sb.from('companies').select('id').eq('owner_id',eid),
     sb.from('deals').select('id,value,stage').eq('owner_id',eid).not('stage','in','("Won","Lost")'),
-    sb.from('meetings').select('*,contacts(first_name,last_name)').eq('owner_id',eid).gte('meeting_date',new Date().toISOString()).order('meeting_date').limit(5),
-    sb.from('tasks').select('*,contacts(first_name,last_name)').eq('owner_id',eid).eq('status','open').order('due_date').limit(5),
-    sb.from('activities').select('*,contacts(first_name,last_name)').eq('owner_id',eid).order('created_at',{ascending:false}).limit(8)
+    sb.from('meetings').select('id,title,meeting_date,contact_id').eq('owner_id',eid).gte('meeting_date',new Date().toISOString()).order('meeting_date').limit(5),
+    sb.from('tasks').select('id,title,due_date,priority,contact_id').eq('owner_id',eid).eq('status','open').order('due_date').limit(5),
+    sb.from('activities').select('id,type,description,created_at').eq('owner_id',eid).order('created_at',{ascending:false}).limit(8)
   ]);
   document.getElementById('crm-stat-contacts').textContent=(contacts||[]).length;
   document.getElementById('crm-stat-companies').textContent=(companies||[]).length;
   document.getElementById('crm-stat-deals').textContent=(deals||[]).length;
   const pv=(deals||[]).reduce((a,d)=>a+(parseFloat(d.value)||0),0);
   document.getElementById('crm-stat-value').textContent=pv>0?'$'+(pv/1000).toFixed(0)+'k':'$0';
-  document.getElementById('crm-upcoming-meetings').innerHTML=meetings&&meetings.length?meetings.map(m=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-weight:500;">${m.title}</div><div style="color:var(--muted);font-size:12px;">${fmtDateTime(m.meeting_date)}${m.contacts?' · '+m.contacts.first_name+' '+m.contacts.last_name:''}</div></div>`).join(''):'<p style="font-size:13px;color:var(--muted);">No upcoming meetings.</p>';
+  document.getElementById('crm-upcoming-meetings').innerHTML=meetings&&meetings.length?meetings.map(m=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-weight:500;">${m.title}</div><div style="color:var(--muted);font-size:12px;">${fmtDateTime(m.meeting_date)}</div></div>`).join(''):'<p style="font-size:13px;color:var(--muted);">No upcoming meetings.</p>';
   document.getElementById('crm-open-tasks').innerHTML=tasks&&tasks.length?tasks.map(t=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;align-items:center;gap:8px;"><button class="btn btn-sm" style="padding:2px 6px;font-size:11px;" onclick="completeTask('${t.id}')"><i class="ti ti-check"></i></button><div><div>${t.title}</div><div style="color:var(--muted);font-size:11px;">${t.due_date?fmtDateShort(t.due_date)+' · ':''}${priorityBadge(t.priority)}</div></div></div>`).join(''):'<p style="font-size:13px;color:var(--muted);">No open tasks.</p>';
-  document.getElementById('crm-recent-activity').innerHTML=activities&&activities.length?activities.map(a=>`<div class="activity-item">${activityIcon(a.type)}<div><div style="font-size:13px;">${a.description}</div><div style="font-size:11px;color:var(--muted);">${fmtDateTime(a.created_at)}${a.contacts?' · '+a.contacts.first_name+' '+a.contacts.last_name:''}</div></div></div>`).join(''):'<p style="font-size:13px;color:var(--muted);">No activity yet.</p>';
+  document.getElementById('crm-recent-activity').innerHTML=activities&&activities.length?activities.map(a=>`<div class="activity-item">${activityIcon(a.type)}<div><div style="font-size:13px;">${a.description}</div><div style="font-size:11px;color:var(--muted);">${fmtDateTime(a.created_at)}</div></div></div>`).join(''):'<p style="font-size:13px;color:var(--muted);">No activity yet.</p>';
 }
 async function loadContacts(){const{data}=await sb.from('contacts').select('*,companies(name)').eq('owner_id',currentUser.employee_id).order('last_name');allContacts=data||[];renderContacts(data||[]);}
 function filterContacts(){const q=document.getElementById('contact-search').value.toLowerCase();renderContacts(allContacts.filter(c=>(c.first_name+' '+c.last_name+' '+(c.title||'')+' '+(c.companies?.name||'')).toLowerCase().includes(q)));}
@@ -1180,7 +1179,7 @@ function renderDeals(deals){
 }
 function resetDealForm(){editingDealId=null;['d-title','d-value','d-prob','d-desc','d-lost'].forEach(id=>document.getElementById(id).value='');document.getElementById('d-stage').value='Lead';document.getElementById('d-contact').value='';document.getElementById('d-company').value='';document.getElementById('d-close').value='';document.getElementById('d-err').textContent='';document.getElementById('d-delete-btn').style.display='none';document.getElementById('d-lost-wrap').style.display='none';document.getElementById('deal-modal-title').innerHTML='<i class="ti ti-trending-up" style="color:var(--gold);margin-right:6px;"></i>Add deal';}
 async function openEditDeal(id){const{data}=await sb.from('deals').select('*').eq('id',id).single();if(!data)return;editingDealId=id;document.getElementById('deal-modal-title').innerHTML='<i class="ti ti-trending-up" style="color:var(--gold);margin-right:6px;"></i>Edit deal';document.getElementById('d-title').value=data.title;document.getElementById('d-stage').value=data.stage;document.getElementById('d-value').value=data.value||'';document.getElementById('d-contact').value=data.contact_id||'';document.getElementById('d-company').value=data.company_id||'';document.getElementById('d-close').value=data.close_date||'';document.getElementById('d-prob').value=data.probability||'';document.getElementById('d-desc').value=data.description||'';document.getElementById('d-lost').value=data.lost_reason||'';document.getElementById('d-lost-wrap').style.display=data.stage==='Lost'?'block':'none';document.getElementById('d-delete-btn').style.display='inline-flex';openModal('deal-modal');}
-async function loadMeetings(){const{data}=await sb.from('meetings').select('*,contacts(first_name,last_name),companies(name)').eq('owner_id',currentUser.employee_id).order('meeting_date',{ascending:false});renderMeetings(data||[]);}
+async function loadMeetings(){const{data}=await sb.from('meetings').select('*').eq('owner_id',currentUser.employee_id).order('meeting_date',{ascending:false});renderMeetings(data||[]);}
 function renderMeetings(meetings){
   const el=document.getElementById('meetings-list');
   if(!meetings.length){el.innerHTML='<div class="empty-state"><i class="ti ti-calendar-event"></i>No meetings yet.</div>';return;}
@@ -1190,16 +1189,16 @@ function renderMeetings(meetings){
 }
 function resetMeetingForm(){editingMeetingId=null;currentCalMeeting=null;['mt-title','mt-date','mt-location','mt-notes','mt-outcome'].forEach(id=>document.getElementById(id).value='');document.getElementById('mt-duration').value='60';document.getElementById('mt-type').value='in_person';document.getElementById('mt-contact').value='';document.getElementById('mt-company').value='';document.getElementById('mt-deal').value='';document.getElementById('mt-err').textContent='';document.getElementById('mt-delete-btn').style.display='none';document.getElementById('mt-cal-btn').style.display='none';}
 async function openEditMeeting(id){const{data}=await sb.from('meetings').select('*').eq('id',id).single();if(!data)return;editingMeetingId=id;currentCalMeeting=data;document.getElementById('mt-title').value=data.title;document.getElementById('mt-date').value=toDatetimeLocal(data.meeting_date);document.getElementById('mt-duration').value=data.duration_mins||60;document.getElementById('mt-contact').value=data.contact_id||'';document.getElementById('mt-company').value=data.company_id||'';document.getElementById('mt-deal').value=data.deal_id||'';document.getElementById('mt-type').value=data.meeting_type||'in_person';document.getElementById('mt-location').value=data.location||'';document.getElementById('mt-notes').value=data.notes||'';document.getElementById('mt-outcome').value=data.outcome||'';document.getElementById('mt-delete-btn').style.display='inline-flex';document.getElementById('mt-cal-btn').style.display='inline-flex';openModal('meeting-modal');}
-async function loadTasks(){let q=sb.from('tasks').select('*,contacts(first_name,last_name)').eq('owner_id',currentUser.employee_id);if(taskFilter!=='all')q=q.eq('status',taskFilter);const{data}=await q.order('due_date');renderTasks(data||[]);}
+async function loadTasks(){let q=sb.from('tasks').select('*').eq('owner_id',currentUser.employee_id);if(taskFilter!=='all')q=q.eq('status',taskFilter);const{data}=await q.order('due_date');renderTasks(data||[]);}
 function setTaskFilter(f){taskFilter=f;['open','completed','all'].forEach(n=>{const el=document.getElementById('tf-'+n);if(el){el.style.background=n===f?'var(--gold-light)':'';el.style.borderColor=n===f?'var(--gold)':'var(--border)';}});loadTasks();}
 function renderTasks(tasks){
   const el=document.getElementById('tasks-list');
   if(!tasks.length){el.innerHTML='<div class="empty-state"><i class="ti ti-checkbox"></i>No tasks here.</div>';return;}
-  el.innerHTML=tasks.map(t=>`<div class="task-row"><button class="btn btn-sm" style="padding:4px 8px;" onclick="${t.status==='open'?`completeTask('${t.id}')`:`reopenTask('${t.id}')`}"><i class="ti ${t.status==='open'?'ti-circle':'ti-circle-check'}" style="color:${t.status==='open'?'var(--muted)':'var(--green-text)'};"></i></button><div style="flex:1;${t.status==='completed'?'opacity:.5;text-decoration:line-through;':''}"><div style="font-size:14px;">${t.title}</div><div style="font-size:12px;color:var(--muted);">${t.due_date?fmtDateTime(t.due_date)+' · ':''}${priorityBadge(t.priority)}${t.contacts?' · '+t.contacts.first_name+' '+t.contacts.last_name:''}</div></div><button class="btn btn-sm" onclick="openEditTask('${t.id}')"><i class="ti ti-edit"></i></button></div>`).join('');
+  el.innerHTML=tasks.map(t=>`<div class="task-row"><button class="btn btn-sm" style="padding:4px 8px;" onclick="${t.status==='open'?`completeTask('${t.id}')`:`reopenTask('${t.id}')`}"><i class="ti ${t.status==='open'?'ti-circle':'ti-circle-check'}" style="color:${t.status==='open'?'var(--muted)':'var(--green-text)'};"></i></button><div style="flex:1;${t.status==='completed'?'opacity:.5;text-decoration:line-through;':''}"><div style="font-size:14px;">${t.title}</div><div style="font-size:12px;color:var(--muted);">${t.due_date?fmtDateTime(t.due_date)+' · ':''}${priorityBadge(t.priority)}</div></div><button class="btn btn-sm" onclick="openEditTask('${t.id}')"><i class="ti ti-edit"></i></button></div>`).join('');
 }
 function resetTaskForm(){editingTaskId=null;['tk-title','tk-due','tk-notes'].forEach(id=>document.getElementById(id).value='');document.getElementById('tk-priority').value='medium';document.getElementById('tk-contact').value='';document.getElementById('tk-deal').value='';document.getElementById('tk-err').textContent='';document.getElementById('tk-delete-btn').style.display='none';}
 async function openEditTask(id){const{data}=await sb.from('tasks').select('*').eq('id',id).single();if(!data)return;editingTaskId=id;document.getElementById('tk-title').value=data.title;document.getElementById('tk-due').value=data.due_date?toDatetimeLocal(data.due_date):'';document.getElementById('tk-priority').value=data.priority||'medium';document.getElementById('tk-contact').value=data.contact_id||'';document.getElementById('tk-deal').value=data.deal_id||'';document.getElementById('tk-notes').value=data.notes||'';document.getElementById('tk-delete-btn').style.display='inline-flex';openModal('task-modal');}
-async function loadActivity(){const{data}=await sb.from('activities').select('*,contacts(first_name,last_name),deals(title)').eq('owner_id',currentUser.employee_id).order('created_at',{ascending:false}).limit(50);renderActivityList(data||[],document.getElementById('activity-list'));}
+async function loadActivity(){const{data}=await sb.from('activities').select('*').eq('owner_id',currentUser.employee_id).order('created_at',{ascending:false}).limit(50);renderActivityList(data||[],document.getElementById('activity-list'));}
 function renderActivityList(activities,el){
   if(!el)return;
   if(!activities||!activities.length){el.innerHTML='<div class="empty-state"><i class="ti ti-activity"></i>No activity yet.</div>';return;}
